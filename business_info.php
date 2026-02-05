@@ -1,6 +1,8 @@
 <?php
 $pageTitle = 'বিজনেস ইনফো';
 require __DIR__ . '/includes/header.php';
+
+$business = fetch_one('SELECT * FROM business_info ORDER BY id DESC LIMIT 1');
 ?>
 <div class="row g-4">
     <div class="col-lg-8">
@@ -9,27 +11,23 @@ require __DIR__ . '/includes/header.php';
             <form class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">ব্যবসার নাম</label>
-                    <input type="text" class="form-control" value="Milon Veterinary">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($business['business_name'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">ফোন</label>
-                    <input type="text" class="form-control" value="+8801XXXXXXXXX">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($business['phone'] ?? '') ?>">
                 </div>
                 <div class="col-12">
                     <label class="form-label">ঠিকানা</label>
-                    <input type="text" class="form-control" value="ফার্মগেট, ঢাকা">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($business['address'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">ইমেইল</label>
-                    <input type="email" class="form-control" value="info@milonvet.com">
+                    <input type="email" class="form-control" value="<?= htmlspecialchars($business['email'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">মুদ্রা</label>
-                    <select class="form-select">
-                        <option selected>৳ (BDT)</option>
-                        <option>₹ (INR)</option>
-                        <option>$ (USD)</option>
-                    </select>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($business['currency'] ?? ($settings['currency'] ?? '৳')) ?>">
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary" type="button">সংরক্ষণ করুন</button>
@@ -43,15 +41,17 @@ require __DIR__ . '/includes/header.php';
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex justify-content-between">
                     <span>বিজনেস প্রোফাইল</span>
-                    <span class="badge bg-success">সম্পূর্ণ</span>
+                    <span class="badge <?= $business ? 'bg-success' : 'bg-warning text-dark' ?>">
+                        <?= $business ? 'সম্পূর্ণ' : 'অপূর্ণ' ?>
+                    </span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
                     <span>ট্যাক্স রেট</span>
-                    <span class="badge bg-warning text-dark">পর্যালোচনা</span>
+                    <span class="badge bg-secondary">সেট করুন</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
                     <span>ব্রাঞ্চ</span>
-                    <span class="badge bg-secondary">১ টি</span>
+                    <span class="badge bg-secondary">০ টি</span>
                 </li>
             </ul>
         </div>

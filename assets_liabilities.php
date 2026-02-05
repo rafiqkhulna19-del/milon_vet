@@ -1,6 +1,15 @@
 <?php
 $pageTitle = 'দায়-পরিসম্পদ';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$assets = fetch_all('SELECT name, amount FROM assets ORDER BY id DESC');
+$liabilities = fetch_all('SELECT name, amount FROM liabilities ORDER BY id DESC');
+$assetTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM assets');
+$liabilityTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM liabilities');
+$assetTotal = $assetTotalRow['total'] ?? 0;
+$liabilityTotal = $liabilityTotalRow['total'] ?? 0;
+$netWorth = $assetTotal - $liabilityTotal;
 ?>
 <div class="row g-4">
     <div class="col-lg-6">
@@ -14,18 +23,18 @@ require __DIR__ . '/includes/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>ইনভেন্টরি স্টক</td>
-                        <td>৳ 120,000</td>
-                    </tr>
-                    <tr>
-                        <td>ক্যাশ ইন হ্যান্ড</td>
-                        <td>৳ 25,000</td>
-                    </tr>
-                    <tr>
-                        <td>ব্যাংক ব্যালেন্স</td>
-                        <td>৳ 80,000</td>
-                    </tr>
+                    <?php if (empty($assets)): ?>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">কোনো পরিসম্পদ নেই।</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($assets as $asset): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($asset['name']) ?></td>
+                                <td><?= format_currency($currency, $asset['amount']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -41,18 +50,18 @@ require __DIR__ . '/includes/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>সাপ্লায়ার বকেয়া</td>
-                        <td>৳ 45,000</td>
-                    </tr>
-                    <tr>
-                        <td>স্টাফ বেতন</td>
-                        <td>৳ 15,000</td>
-                    </tr>
-                    <tr>
-                        <td>ইউটিলিটি বিল</td>
-                        <td>৳ 6,500</td>
-                    </tr>
+                    <?php if (empty($liabilities)): ?>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">কোনো দায় নেই।</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($liabilities as $liability): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($liability['name']) ?></td>
+                                <td><?= format_currency($currency, $liability['amount']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -62,7 +71,7 @@ require __DIR__ . '/includes/header.php';
     <h5 class="section-title">নেট ওয়ার্থ</h5>
     <div class="d-flex align-items-center justify-content-between">
         <span class="fs-5">পরিসম্পদ - দায়</span>
-        <span class="fs-4 fw-bold text-success">৳ 158,500</span>
+        <span class="fs-4 fw-bold text-success"><?= format_currency($currency, $netWorth) ?></span>
     </div>
 </div>
 <?php require __DIR__ . '/includes/footer.php'; ?>

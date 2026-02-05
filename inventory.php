@@ -1,6 +1,12 @@
 <?php
 $pageTitle = 'ইনভেন্টরি';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price, c.name AS category
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    ORDER BY p.id DESC');
 ?>
 <div class="card p-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -20,30 +26,34 @@ require __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>ভিটামিন ফিড প্রিমিক্স</td>
-                    <td>ফিড</td>
-                    <td>120 ব্যাগ</td>
-                    <td>৳ 1,200</td>
-                    <td>৳ 1,450</td>
-                    <td><span class="badge bg-success">ইন স্টক</span></td>
-                </tr>
-                <tr>
-                    <td>এন্টি বায়োটিক ভেট</td>
-                    <td>মেডিসিন</td>
-                    <td>25 বোতল</td>
-                    <td>৳ 350</td>
-                    <td>৳ 450</td>
-                    <td><span class="badge bg-warning text-dark">লো স্টক</span></td>
-                </tr>
-                <tr>
-                    <td>ক্যালসিয়াম সাপ্লিমেন্ট</td>
-                    <td>সাপ্লিমেন্ট</td>
-                    <td>8 প্যাক</td>
-                    <td>৳ 220</td>
-                    <td>৳ 300</td>
-                    <td><span class="badge bg-danger">রিস্টক</span></td>
-                </tr>
+                <?php if (empty($products)): ?>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">কোনো পণ্য নেই।</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($products as $product): ?>
+                        <?php
+                            $stock = (int) $product['stock'];
+                            $status = 'ইন স্টক';
+                            $badge = 'bg-success';
+                            if ($stock <= 5) {
+                                $status = 'রিস্টক';
+                                $badge = 'bg-danger';
+                            } elseif ($stock <= 10) {
+                                $status = 'লো স্টক';
+                                $badge = 'bg-warning text-dark';
+                            }
+                        ?>
+                        <tr>
+                            <td><?= htmlspecialchars($product['name']) ?></td>
+                            <td><?= htmlspecialchars($product['category'] ?? 'অনির্ধারিত') ?></td>
+                            <td><?= $stock ?></td>
+                            <td><?= format_currency($currency, $product['purchase_price']) ?></td>
+                            <td><?= format_currency($currency, $product['selling_price']) ?></td>
+                            <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

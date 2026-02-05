@@ -1,6 +1,31 @@
 <?php
 $pageTitle = 'ড্যাশবোর্ড';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$today = date('Y-m-d');
+
+$salesTotalRow = fetch_one('SELECT COALESCE(SUM(total), 0) AS total FROM sales WHERE DATE(created_at) = :today', [
+    ':today' => $today,
+]);
+$todaySales = $salesTotalRow['total'] ?? 0;
+
+$expenseTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE expense_date = :today', [
+    ':today' => $today,
+]);
+$todayExpenses = $expenseTotalRow['total'] ?? 0;
+
+$dueRow = fetch_one('SELECT COALESCE(SUM(total - paid), 0) AS total FROM sales WHERE total > paid');
+$dueTotal = $dueRow['total'] ?? 0;
+
+$lowStockRow = fetch_one('SELECT COUNT(*) AS total FROM products WHERE stock <= 10');
+$lowStockCount = $lowStockRow['total'] ?? 0;
+
+$recentSales = fetch_all('SELECT s.memo_no, s.total, s.paid, c.name AS customer
+    FROM sales s
+    LEFT JOIN customers c ON c.id = s.customer_id
+    ORDER BY s.created_at DESC
+    LIMIT 5');
 ?>
 <div class="row g-4">
     <div class="col-12">
@@ -21,7 +46,7 @@ require __DIR__ . '/includes/header.php';
             <div class="d-flex justify-content-between">
                 <div>
                     <p class="text-muted mb-1">আজকের সেলস</p>
-                    <h4 class="fw-bold">৳ 12,400</h4>
+                    <h4 class="fw-bold"><?= format_currency($currency, $todaySales) ?></h4>
                 </div>
                 <i class="bi bi-receipt fs-3 text-primary"></i>
             </div>
@@ -32,7 +57,7 @@ require __DIR__ . '/includes/header.php';
             <div class="d-flex justify-content-between">
                 <div>
                     <p class="text-muted mb-1">স্টক এলার্ট</p>
-                    <h4 class="fw-bold">8 আইটেম</h4>
+                    <h4 class="fw-bold"><?= (int) $lowStockCount ?> আইটেম</h4>
                 </div>
                 <i class="bi bi-box-seam fs-3 text-warning"></i>
             </div>
@@ -43,7 +68,7 @@ require __DIR__ . '/includes/header.php';
             <div class="d-flex justify-content-between">
                 <div>
                     <p class="text-muted mb-1">বকেয়া</p>
-                    <h4 class="fw-bold">৳ 32,100</h4>
+                    <h4 class="fw-bold"><?= format_currency($currency, $dueTotal) ?></h4>
                 </div>
                 <i class="bi bi-wallet2 fs-3 text-danger"></i>
             </div>
@@ -54,7 +79,7 @@ require __DIR__ . '/includes/header.php';
             <div class="d-flex justify-content-between">
                 <div>
                     <p class="text-muted mb-1">খরচ</p>
-                    <h4 class="fw-bold">৳ 5,250</h4>
+                    <h4 class="fw-bold"><?= format_currency($currency, $todayExpenses) ?></h4>
                 </div>
                 <i class="bi bi-journal-minus fs-3 text-success"></i>
             </div>
@@ -77,24 +102,31 @@ require __DIR__ . '/includes/header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#MV-1204</td>
-                            <td>রহিম এন্টারপ্রাইজ</td>
-                            <td>৳ 3,200</td>
-                            <td><span class="badge bg-success">পেইড</span></td>
-                        </tr>
-                        <tr>
-                            <td>#MV-1205</td>
-                            <td>সাথী ফিড</td>
-                            <td>৳ 4,850</td>
-                            <td><span class="badge bg-warning text-dark">আংশিক</span></td>
-                        </tr>
-                        <tr>
-                            <td>#MV-1206</td>
-                            <td>কৃষ্ণা ভেট ক্লিনিক</td>
-                            <td>৳ 2,750</td>
-                            <td><span class="badge bg-danger">বকেয়া</span></td>
-                        </tr>
+                        <?php if (empty($recentSales)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">কোনো সেলস পাওয়া যায়নি।</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($recentSales as $sale): ?>
+                                <?php
+                                    $status = 'বকেয়া';
+                                    $badge = 'bg-danger';
+                                    if ((float) $sale['paid'] >= (float) $sale['total']) {
+                                        $status = 'পেইড';
+                                        $badge = 'bg-success';
+                                    } elseif ((float) $sale['paid'] > 0) {
+                                        $status = 'আংশিক';
+                                        $badge = 'bg-warning text-dark';
+                                    }
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($sale['memo_no']) ?></td>
+                                    <td><?= htmlspecialchars($sale['customer'] ?? 'ওয়াক-ইন') ?></td>
+                                    <td><?= format_currency($currency, $sale['total']) ?></td>
+                                    <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

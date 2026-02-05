@@ -1,6 +1,15 @@
 <?php
 $pageTitle = 'রিপোর্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$monthly = fetch_all('SELECT DATE_FORMAT(s.created_at, "%Y-%m") AS month,
+    COALESCE(SUM(s.total), 0) AS sales_total,
+    COALESCE((SELECT SUM(e.amount) FROM expenses e WHERE DATE_FORMAT(e.expense_date, "%Y-%m") = DATE_FORMAT(s.created_at, "%Y-%m")), 0) AS expense_total
+    FROM sales s
+    GROUP BY DATE_FORMAT(s.created_at, "%Y-%m")
+    ORDER BY month DESC
+    LIMIT 6');
 ?>
 <div class="row g-4">
     <div class="col-lg-4">
@@ -28,24 +37,23 @@ require __DIR__ . '/includes/header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>জানুয়ারি</td>
-                            <td>৳ 210,000</td>
-                            <td>৳ 140,000</td>
-                            <td>৳ 70,000</td>
-                        </tr>
-                        <tr>
-                            <td>ফেব্রুয়ারি</td>
-                            <td>৳ 198,000</td>
-                            <td>৳ 132,500</td>
-                            <td>৳ 65,500</td>
-                        </tr>
-                        <tr>
-                            <td>মার্চ</td>
-                            <td>৳ 235,000</td>
-                            <td>৳ 150,000</td>
-                            <td>৳ 85,000</td>
-                        </tr>
+                        <?php if (empty($monthly)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">কোনো রিপোর্ট ডাটা নেই।</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($monthly as $row): ?>
+                                <?php
+                                    $profit = (float) $row['sales_total'] - (float) $row['expense_total'];
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row['month']) ?></td>
+                                    <td><?= format_currency($currency, $row['sales_total']) ?></td>
+                                    <td><?= format_currency($currency, $row['expense_total']) ?></td>
+                                    <td><?= format_currency($currency, $profit) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

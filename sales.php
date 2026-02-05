@@ -1,6 +1,13 @@
 <?php
 $pageTitle = 'সেলস ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$sales = fetch_all('SELECT s.memo_no, s.total, c.name AS customer
+    FROM sales s
+    LEFT JOIN customers c ON c.id = s.customer_id
+    ORDER BY s.created_at DESC
+    LIMIT 5');
 ?>
 <div class="row g-4">
     <div class="col-lg-7">
@@ -13,7 +20,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">মেমো নং</label>
-                    <input class="form-control" type="text" placeholder="#MV-1207">
+                    <input class="form-control" type="text" placeholder="#MV-0001">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">পেমেন্ট পদ্ধতি</label>
@@ -25,7 +32,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">মোট পরিমাণ</label>
-                    <input class="form-control" type="number" placeholder="৳">
+                    <input class="form-control" type="number" placeholder="<?= $currency ?>">
                 </div>
                 <div class="col-12">
                     <label class="form-label">নোট</label>
@@ -41,18 +48,16 @@ require __DIR__ . '/includes/header.php';
         <div class="card p-4">
             <h5 class="section-title">সাম্প্রতিক সেলস</h5>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>#MV-1206</span>
-                    <span>৳ 2,750</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>#MV-1205</span>
-                    <span>৳ 4,850</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>#MV-1204</span>
-                    <span>৳ 3,200</span>
-                </li>
+                <?php if (empty($sales)): ?>
+                    <li class="list-group-item text-center text-muted">কোনো সেলস নেই।</li>
+                <?php else: ?>
+                    <?php foreach ($sales as $sale): ?>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><?= htmlspecialchars($sale['memo_no']) ?></span>
+                            <span><?= format_currency($currency, $sale['total']) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </ul>
         </div>
     </div>

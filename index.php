@@ -1,6 +1,8 @@
 <?php
 session_start();
 $settings = require __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/functions.php';
+[$pdo, $db_error] = db_connection();
 
 if (!empty($_SESSION['user'])) {
     header('Location: dashboard.php');
@@ -8,20 +10,35 @@ if (!empty($_SESSION['user'])) {
 }
 
 $error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$info = '';
+$userCount = 0;
+if ($pdo) {
+    $countRow = fetch_one('SELECT COUNT(*) AS total FROM users');
+    $userCount = (int) ($countRow['total'] ?? 0);
+    if ($userCount === 0) {
+        $info = 'প্রথমে ডাটাবেসে একজন অ্যাডমিন ব্যবহারকারী তৈরি করুন।';
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
-    if ($username === 'admin' && $password === '1234') {
+    $user = fetch_one('SELECT id, name, username, password_hash, role FROM users WHERE username = :username LIMIT 1', [
+        ':username' => $username,
+    ]);
+
+    if ($user && password_verify($password, $user['password_hash'])) {
         $_SESSION['user'] = [
-            'name' => 'Milon Manager',
-            'role' => 'Owner',
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'role' => $user['role'],
         ];
         header('Location: dashboard.php');
         exit;
     }
 
-    $error = 'সঠিক ইউজারনেম ও পাসওয়ার্ড দিন (ডেমো: admin / 1234)।';
+    $error = 'সঠিক ইউজারনেম ও পাসওয়ার্ড দিন।';
 }
 ?>
 <!DOCTYPE html>
@@ -37,6 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card shadow-sm p-4" style="max-width: 420px; width: 100%;">
         <h3 class="fw-bold mb-1 text-center"><?= htmlspecialchars($settings['app_name']) ?></h3>
         <p class="text-center text-muted mb-4"><?= htmlspecialchars($settings['app_tagline']) ?></p>
+        <?php if (!empty($db_error)): ?>
+            <div class="alert alert-danger">ডাটাবেসে সংযোগ হয়নি: <?= htmlspecialchars($db_error) ?></div>
+        <?php endif; ?>
+        <?php if ($info): ?>
+            <div class="alert alert-info"><?= htmlspecialchars($info) ?></div>
+        <?php endif; ?>
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
@@ -49,9 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label class="form-label">পাসওয়ার্ড</label>
                 <input type="password" name="password" class="form-control" required>
             </div>
-            <button class="btn btn-primary w-100">লগইন</button>
+            <button class="btn btn-primary w-100" <?= $userCount === 0 ? 'disabled' : '' ?>>লগইন</button>
         </form>
-        <div class="mt-3 text-center small text-muted">ডেমো ইউজার: admin / 1234</div>
     </div>
     <script src="assets/js/app.js"></script>
 </body>

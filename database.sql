@@ -7,6 +7,9 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'Owner',
+    email VARCHAR(100),
+    phone VARCHAR(30),
+    address VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

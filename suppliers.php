@@ -1,6 +1,9 @@
 <?php
 $pageTitle = 'সাপ্লায়ার ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$suppliers = fetch_all('SELECT name, phone, address, balance FROM suppliers ORDER BY id DESC');
 ?>
 <div class="card p-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -13,23 +16,25 @@ require __DIR__ . '/includes/header.php';
                 <tr>
                     <th>নাম</th>
                     <th>মোবাইল</th>
-                    <th>শেষ ক্রয়</th>
+                    <th>ঠিকানা</th>
                     <th>বকেয়া</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Vet Pharma Ltd.</td>
-                    <td>+88016XXXXXXX</td>
-                    <td>10/02/2024</td>
-                    <td>৳ 12,000</td>
-                </tr>
-                <tr>
-                    <td>Green Feed</td>
-                    <td>+88015XXXXXXX</td>
-                    <td>08/02/2024</td>
-                    <td>৳ 7,500</td>
-                </tr>
+                <?php if (empty($suppliers)): ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">কোনো সাপ্লায়ার নেই।</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($supplier['name']) ?></td>
+                            <td><?= htmlspecialchars($supplier['phone'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($supplier['address'] ?? '') ?></td>
+                            <td><?= format_currency($currency, $supplier['balance'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

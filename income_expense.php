@@ -1,23 +1,44 @@
 <?php
 $pageTitle = 'আয়-ব্যায়';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$today = date('Y-m-d');
+
+$incomeRows = fetch_all('SELECT source, amount FROM incomes WHERE income_date = :today', [
+    ':today' => $today,
+]);
+$incomeTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM incomes WHERE income_date = :today', [
+    ':today' => $today,
+]);
+$incomeTotal = $incomeTotalRow['total'] ?? 0;
+
+$expenseRows = fetch_all('SELECT category, amount FROM expenses WHERE expense_date = :today', [
+    ':today' => $today,
+]);
+$expenseTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE expense_date = :today', [
+    ':today' => $today,
+]);
+$expenseTotal = $expenseTotalRow['total'] ?? 0;
 ?>
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card p-4">
             <h5 class="section-title">আজকের আয়</h5>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>সেলস ক্যাশ</span>
-                    <span>৳ 9,800</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>ব্যাংক ট্রান্সফার</span>
-                    <span>৳ 2,600</span>
-                </li>
+                <?php if (empty($incomeRows)): ?>
+                    <li class="list-group-item text-muted text-center">আজকের কোন আয় নেই।</li>
+                <?php else: ?>
+                    <?php foreach ($incomeRows as $income): ?>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><?= htmlspecialchars($income['source']) ?></span>
+                            <span><?= format_currency($currency, $income['amount']) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 <li class="list-group-item d-flex justify-content-between fw-bold">
                     <span>মোট</span>
-                    <span>৳ 12,400</span>
+                    <span><?= format_currency($currency, $incomeTotal) ?></span>
                 </li>
             </ul>
         </div>
@@ -26,17 +47,19 @@ require __DIR__ . '/includes/header.php';
         <div class="card p-4">
             <h5 class="section-title">আজকের ব্যয়</h5>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>স্টাফ পেমেন্ট</span>
-                    <span>৳ 2,000</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>ডেলিভারি চার্জ</span>
-                    <span>৳ 1,250</span>
-                </li>
+                <?php if (empty($expenseRows)): ?>
+                    <li class="list-group-item text-muted text-center">আজকের কোন ব্যয় নেই।</li>
+                <?php else: ?>
+                    <?php foreach ($expenseRows as $expense): ?>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><?= htmlspecialchars($expense['category']) ?></span>
+                            <span><?= format_currency($currency, $expense['amount']) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 <li class="list-group-item d-flex justify-content-between fw-bold">
                     <span>মোট</span>
-                    <span>৳ 3,250</span>
+                    <span><?= format_currency($currency, $expenseTotal) ?></span>
                 </li>
             </ul>
         </div>
@@ -58,7 +81,7 @@ require __DIR__ . '/includes/header.php';
         </div>
         <div class="col-md-4">
             <label class="form-label">পরিমাণ</label>
-            <input class="form-control" type="number" placeholder="৳">
+            <input class="form-control" type="number" placeholder="<?= $currency ?>">
         </div>
         <div class="col-12">
             <button class="btn btn-primary" type="button">সেভ করুন</button>

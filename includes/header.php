@@ -8,6 +8,8 @@ if (empty($_SESSION['user'])) {
     exit;
 }
 $settings = require __DIR__ . '/../config.php';
+require_once __DIR__ . '/functions.php';
+[,$db_error] = db_connection();
 $pages = [
     'dashboard.php' => ['label' => 'ড্যাশবোর্ড', 'icon' => 'bi-speedometer2'],
     'business_info.php' => ['label' => 'বিজনেস ইনফো', 'icon' => 'bi-building'],
@@ -71,3 +73,8 @@ $current = basename($_SERVER['PHP_SELF']);
             </div>
         </aside>
         <main class="col-lg-10 px-4 py-4">
+            <?php if (!empty($db_error)): ?>
+                <div class="alert alert-danger">
+                    ডাটাবেসে সংযোগ হয়নি: <?= htmlspecialchars($db_error) ?>
+                </div>
+            <?php endif; ?>

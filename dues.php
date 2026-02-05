@@ -1,6 +1,13 @@
 <?php
 $pageTitle = 'ডিউ ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$dues = fetch_all('SELECT s.memo_no, s.total, s.paid, s.created_at, c.name AS customer
+    FROM sales s
+    LEFT JOIN customers c ON c.id = s.customer_id
+    WHERE s.total > s.paid
+    ORDER BY s.created_at DESC');
 ?>
 <div class="row g-4">
     <div class="col-lg-8">
@@ -13,22 +20,25 @@ require __DIR__ . '/includes/header.php';
                             <th>কাস্টমার</th>
                             <th>মেমো</th>
                             <th>পরিমাণ</th>
-                            <th>শেষ তারিখ</th>
+                            <th>তারিখ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>সাথী ফিড</td>
-                            <td>#MV-1205</td>
-                            <td>৳ 2,450</td>
-                            <td>15/02/2024</td>
-                        </tr>
-                        <tr>
-                            <td>কৃষ্ণা ভেট ক্লিনিক</td>
-                            <td>#MV-1206</td>
-                            <td>৳ 2,750</td>
-                            <td>20/02/2024</td>
-                        </tr>
+                        <?php if (empty($dues)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">কোনো বকেয়া নেই।</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($dues as $due): ?>
+                                <?php $amount = (float) $due['total'] - (float) $due['paid']; ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($due['customer'] ?? 'ওয়াক-ইন') ?></td>
+                                    <td><?= htmlspecialchars($due['memo_no']) ?></td>
+                                    <td><?= format_currency($currency, $amount) ?></td>
+                                    <td><?= date('d/m/Y', strtotime($due['created_at'])) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

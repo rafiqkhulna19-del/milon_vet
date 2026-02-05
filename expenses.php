@@ -1,6 +1,9 @@
 <?php
 $pageTitle = 'খরচ ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$expenses = fetch_all('SELECT category, amount, expense_date FROM expenses ORDER BY expense_date DESC LIMIT 10');
 ?>
 <div class="row g-4">
     <div class="col-lg-5">
@@ -26,21 +29,19 @@ require __DIR__ . '/includes/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>ইউটিলিটি বিল</td>
-                        <td>৳ 1,500</td>
-                        <td>12/02/2024</td>
-                    </tr>
-                    <tr>
-                        <td>ডেলিভারি চার্জ</td>
-                        <td>৳ 750</td>
-                        <td>12/02/2024</td>
-                    </tr>
-                    <tr>
-                        <td>স্টাফ চা নাস্তা</td>
-                        <td>৳ 400</td>
-                        <td>11/02/2024</td>
-                    </tr>
+                    <?php if (empty($expenses)): ?>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">কোনো খরচ নেই।</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($expenses as $expense): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($expense['category']) ?></td>
+                                <td><?= format_currency($currency, $expense['amount']) ?></td>
+                                <td><?= date('d/m/Y', strtotime($expense['expense_date'])) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

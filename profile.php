@@ -1,6 +1,10 @@
 <?php
 $pageTitle = 'প্রোফাইল আপডেট';
 require __DIR__ . '/includes/header.php';
+
+$user = fetch_one('SELECT name, role, email, phone, address FROM users WHERE id = :id', [
+    ':id' => $_SESSION['user']['id'] ?? 0,
+]);
 ?>
 <div class="row g-4">
     <div class="col-lg-7">
@@ -9,23 +13,23 @@ require __DIR__ . '/includes/header.php';
             <form class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">নাম</label>
-                    <input class="form-control" type="text" value="Milon Manager">
+                    <input class="form-control" type="text" value="<?= htmlspecialchars($user['name'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">পদবি</label>
-                    <input class="form-control" type="text" value="Owner">
+                    <input class="form-control" type="text" value="<?= htmlspecialchars($user['role'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">ইমেইল</label>
-                    <input class="form-control" type="email" value="owner@milonvet.com">
+                    <input class="form-control" type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">ফোন</label>
-                    <input class="form-control" type="text" value="+8801XXXXXXXXX">
+                    <input class="form-control" type="text" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
                 </div>
                 <div class="col-12">
                     <label class="form-label">ঠিকানা</label>
-                    <input class="form-control" type="text" value="ঢাকা, বাংলাদেশ">
+                    <input class="form-control" type="text" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
                 </div>
                 <div class="col-12">
                     <button class="btn btn-primary" type="button">আপডেট করুন</button>

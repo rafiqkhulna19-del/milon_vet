@@ -1,6 +1,9 @@
 <?php
 $pageTitle = 'কাস্টমার ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
+
+$currency = $settings['currency'] ?? '৳';
+$customers = fetch_all('SELECT name, phone, address, due_balance FROM customers ORDER BY id DESC');
 ?>
 <div class="card p-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -18,24 +21,20 @@ require __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>রহিম এন্টারপ্রাইজ</td>
-                    <td>+88017XXXXXXX</td>
-                    <td>সাভার</td>
-                    <td>৳ 8,200</td>
-                </tr>
-                <tr>
-                    <td>সাথী ফিড</td>
-                    <td>+88019XXXXXXX</td>
-                    <td>মানিকগঞ্জ</td>
-                    <td>৳ 4,500</td>
-                </tr>
-                <tr>
-                    <td>কৃষ্ণা ভেট ক্লিনিক</td>
-                    <td>+88018XXXXXXX</td>
-                    <td>গাজীপুর</td>
-                    <td>৳ 6,300</td>
-                </tr>
+                <?php if (empty($customers)): ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">কোনো কাস্টমার নেই।</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($customers as $customer): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($customer['name']) ?></td>
+                            <td><?= htmlspecialchars($customer['phone'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($customer['address'] ?? '') ?></td>
+                            <td><?= format_currency($currency, $customer['due_balance'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
