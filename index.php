@@ -28,7 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $userCount > 0) {
         ':username' => $username,
     ]);
 
-    if ($user && password_verify($password, $user['password_hash'])) {
+    $isValid = false;
+    if ($user) {
+        $hash = $user['password_hash'];
+        $isValid = password_verify($password, $hash) || hash_equals((string) $hash, (string) $password);
+    }
+
+    if ($isValid) {
         $_SESSION['user'] = [
             'id' => $user['id'],
             'name' => $user['name'],
