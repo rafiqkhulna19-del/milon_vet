@@ -20,7 +20,7 @@ if ($pdo) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $userCount > 0) {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         exit;
     }
 
-    $error = 'সঠিক ইউজারনেম ও পাসওয়ার্ড দিন।';
+    $error = 'ইউজারনেম অথবা পাসওয়ার্ড সঠিক নয়।';
 }
 ?>
 <!DOCTYPE html>
