@@ -1,0 +1,38 @@
+:root {
+    --brand-gradient: linear-gradient(120deg, #1f7a8c, #47b39c);
+}
+
+body {
+    font-family: 'Hind Siliguri', 'Segoe UI', sans-serif;
+}
+
+.navbar-brand {
+    letter-spacing: 0.5px;
+}
+
+.hero-card {
+    background: var(--brand-gradient);
+    color: #fff;
+}
+
+.metric-card {
+    border: 0;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.table thead {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-bs-theme='dark'] .hero-card {
+    color: #fff;
+}
+
+[data-bs-theme='dark'] .table thead {
+    background: rgba(255, 255, 255, 0.08);
+}
