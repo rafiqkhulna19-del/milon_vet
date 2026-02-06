@@ -135,3 +135,67 @@ CREATE TABLE liabilities (
     name VARCHAR(100) NOT NULL,
     amount DECIMAL(10, 2) NOT NULL
 );
+
+INSERT INTO users (name, username, password_hash, role, email, phone, address)
+VALUES ('Milon Admin', 'admin', '$2y$10$ZfWGYLfi9aYxHmyo7LIsIu0V4Um5mO4c4l9kH6cYg8e2PH6mEwO4y', 'Owner', 'owner@milonvet.com', '+8801XXXXXXXXX', 'ঢাকা, বাংলাদেশ');
+
+INSERT INTO business_info (business_name, phone, email, address, currency)
+VALUES ('Milon Veterinary', '+8801XXXXXXXXX', 'info@milonvet.com', 'ফার্মগেট, ঢাকা', '৳');
+
+INSERT INTO categories (name, description) VALUES
+('ভেট মেডিসিন', 'ভেটেরিনারি মেডিসিন'),
+('ফিড', 'ফিড ও পশুখাদ্য'),
+('সাপ্লিমেন্ট', 'ভিটামিন ও সাপ্লিমেন্ট');
+
+INSERT INTO expense_categories (name) VALUES
+('স্টাফ বেতন'),
+('ডেলিভারি চার্জ'),
+('ইউটিলিটি বিল'),
+('সাপ্লায়ার পেমেন্ট');
+
+INSERT INTO suppliers (name, phone, address, balance) VALUES
+('Vet Pharma Ltd.', '+88016XXXXXXX', 'ঢাকা', 5000.00),
+('Green Feed', '+88015XXXXXXX', 'মানিকগঞ্জ', 3500.00);
+
+INSERT INTO customers (name, phone, address, due_balance) VALUES
+('রহিম এন্টারপ্রাইজ', '+88017XXXXXXX', 'সাভার', 8200.00),
+('সাথী ফিড', '+88019XXXXXXX', 'মানিকগঞ্জ', 4500.00),
+('কৃষ্ণা ভেট ক্লিনিক', '+88018XXXXXXX', 'গাজীপুর', 6300.00);
+
+INSERT INTO products (name, category_id, supplier_id, purchase_price, selling_price, stock) VALUES
+('ভিটামিন ফিড প্রিমিক্স', 2, 2, 1200.00, 1450.00, 120),
+('এন্টি বায়োটিক ভেট', 1, 1, 350.00, 450.00, 25),
+('ক্যালসিয়াম সাপ্লিমেন্ট', 3, 1, 220.00, 300.00, 8);
+
+INSERT INTO sales (memo_no, customer_id, total, paid, payment_method) VALUES
+('MV-202402-0001', 1, 3200.00, 3200.00, 'ক্যাশ'),
+('MV-202402-0002', 2, 4850.00, 2000.00, 'ব্যাংক');
+
+INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES
+(1, 2, 4, 450.00),
+(2, 1, 1, 1450.00);
+
+INSERT INTO purchases (supplier_id, total_amount, discount, net_amount, paid_amount, due_amount, payment_type, purchase_date)
+VALUES (1, 5000.00, 200.00, 4800.00, 3000.00, 1800.00, 'partial', '2024-02-12');
+
+INSERT INTO purchase_items (purchase_id, product_id, quantity, unit_cost, line_total) VALUES
+(1, 2, 10, 350.00, 3500.00),
+(1, 3, 10, 150.00, 1500.00);
+
+INSERT INTO expenses (expense_category_id, amount, expense_date, note) VALUES
+(3, 1500.00, '2024-02-12', 'ইউটিলিটি বিল'),
+(2, 750.00, '2024-02-12', 'ডেলিভারি চার্জ');
+
+INSERT INTO incomes (source, amount, income_date, note) VALUES
+('সেলস ক্যাশ', 9800.00, '2024-02-12', 'দৈনিক বিক্রয়'),
+('ব্যাংক ট্রান্সফার', 2600.00, '2024-02-12', 'দৈনিক বিক্রয়');
+
+INSERT INTO assets (name, amount) VALUES
+('ইনভেন্টরি স্টক', 120000.00),
+('ক্যাশ ইন হ্যান্ড', 25000.00),
+('ব্যাংক ব্যালেন্স', 80000.00);
+
+INSERT INTO liabilities (name, amount) VALUES
+('সাপ্লায়ার বকেয়া', 45000.00),
+('স্টাফ বেতন', 15000.00),
+('ইউটিলিটি বিল', 6500.00);
