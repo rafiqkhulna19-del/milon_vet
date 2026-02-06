@@ -48,10 +48,12 @@ CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     category_id INT,
+    supplier_id INT,
     purchase_price DECIMAL(10, 2) NOT NULL,
     selling_price DECIMAL(10, 2) NOT NULL,
     stock INT DEFAULT 0,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );
 
 CREATE TABLE purchases (
@@ -60,6 +62,10 @@ CREATE TABLE purchases (
     supplier_id INT,
     quantity INT NOT NULL,
     unit_cost DECIMAL(10, 2) NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    paid_amount DECIMAL(10, 2) NOT NULL,
+    due_amount DECIMAL(10, 2) NOT NULL,
+    payment_type VARCHAR(20) NOT NULL,
     purchase_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id),
@@ -87,12 +93,18 @@ CREATE TABLE sale_items (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+CREATE TABLE expense_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    category VARCHAR(100) NOT NULL,
+    expense_category_id INT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
     expense_date DATE NOT NULL,
-    note VARCHAR(255)
+    note VARCHAR(255),
+    FOREIGN KEY (expense_category_id) REFERENCES expense_categories(id)
 );
 
 CREATE TABLE incomes (

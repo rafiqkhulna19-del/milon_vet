@@ -6,10 +6,12 @@ $currency = $settings['currency'] ?? '৳';
 $message = '';
 
 $categories = fetch_all('SELECT id, name FROM categories ORDER BY name ASC');
+$suppliers = fetch_all('SELECT id, name FROM suppliers ORDER BY name ASC');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $categoryId = (int) ($_POST['category_id'] ?? 0);
+    $supplierId = (int) ($_POST['supplier_id'] ?? 0);
     $purchasePrice = (float) ($_POST['purchase_price'] ?? 0);
     $sellingPrice = (float) ($_POST['selling_price'] ?? 0);
     $stock = (int) ($_POST['stock'] ?? 0);
@@ -17,10 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name !== '' && $purchasePrice > 0 && $sellingPrice > 0) {
         [$pdo] = db_connection();
         if ($pdo) {
-            $stmt = $pdo->prepare('INSERT INTO products (name, category_id, purchase_price, selling_price, stock) VALUES (:name, :category_id, :purchase_price, :selling_price, :stock)');
+            $stmt = $pdo->prepare('INSERT INTO products (name, category_id, supplier_id, purchase_price, selling_price, stock) VALUES (:name, :category_id, :supplier_id, :purchase_price, :selling_price, :stock)');
             $stmt->execute([
                 ':name' => $name,
                 ':category_id' => $categoryId ?: null,
+                ':supplier_id' => $supplierId ?: null,
                 ':purchase_price' => $purchasePrice,
                 ':selling_price' => $sellingPrice,
                 ':stock' => $stock,
@@ -32,9 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price, c.name AS category
+$products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price, c.name AS category, s.name AS supplier
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN suppliers s ON s.id = p.supplier_id
     ORDER BY p.id DESC');
 ?>
 <div class="card p-4">
@@ -57,9 +61,15 @@ $products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price
                             <option value="<?= (int) $category['id'] ?>"><?= htmlspecialchars($category['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <select class="form-select" name="supplier_id">
+                        <option value="">সাপ্লায়ার নির্বাচন করুন</option>
+                        <?php foreach ($suppliers as $supplier): ?>
+                            <option value="<?= (int) $supplier['id'] ?>"><?= htmlspecialchars($supplier['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                     <input class="form-control" type="number" step="0.01" name="purchase_price" placeholder="ক্রয় মূল্য" required>
                     <input class="form-control" type="number" step="0.01" name="selling_price" placeholder="বিক্রয় মূল্য" required>
-                    <input class="form-control" type="number" name="stock" placeholder="স্টক">
+                    <input class="form-control" type="number" name="stock" placeholder="ইনিশিয়াল স্টক">
                     <button class="btn btn-primary" type="submit">সেভ করুন</button>
                 </form>
             </div>
@@ -71,6 +81,7 @@ $products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price
                         <tr>
                             <th>পণ্য</th>
                             <th>ক্যাটেগরি</th>
+                            <th>সাপ্লায়ার</th>
                             <th>স্টক</th>
                             <th>ক্রয় মূল্য</th>
                             <th>বিক্রয় মূল্য</th>
@@ -80,7 +91,7 @@ $products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price
                     <tbody>
                         <?php if (empty($products)): ?>
                             <tr>
-                                <td colspan="6" class="text-center text-muted">কোনো পণ্য নেই।</td>
+                                <td colspan="7" class="text-center text-muted">কোনো পণ্য নেই।</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($products as $product): ?>
@@ -99,6 +110,7 @@ $products = fetch_all('SELECT p.name, p.stock, p.purchase_price, p.selling_price
                                 <tr>
                                     <td><?= htmlspecialchars($product['name']) ?></td>
                                     <td><?= htmlspecialchars($product['category'] ?? 'অনির্ধারিত') ?></td>
+                                    <td><?= htmlspecialchars($product['supplier'] ?? 'নির্ধারিত নয়') ?></td>
                                     <td><?= $stockValue ?></td>
                                     <td><?= format_currency($currency, $product['purchase_price']) ?></td>
                                     <td><?= format_currency($currency, $product['selling_price']) ?></td>

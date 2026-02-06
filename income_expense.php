@@ -13,7 +13,10 @@ $incomeTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM incom
 ]);
 $incomeTotal = $incomeTotalRow['total'] ?? 0;
 
-$expenseRows = fetch_all('SELECT category, amount FROM expenses WHERE expense_date = :today', [
+$expenseRows = fetch_all('SELECT e.amount, c.name AS category
+    FROM expenses e
+    LEFT JOIN expense_categories c ON c.id = e.expense_category_id
+    WHERE e.expense_date = :today', [
     ':today' => $today,
 ]);
 $expenseTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE expense_date = :today', [
@@ -52,7 +55,7 @@ $expenseTotal = $expenseTotalRow['total'] ?? 0;
                 <?php else: ?>
                     <?php foreach ($expenseRows as $expense): ?>
                         <li class="list-group-item d-flex justify-content-between">
-                            <span><?= htmlspecialchars($expense['category']) ?></span>
+                            <span><?= htmlspecialchars($expense['category'] ?? 'অনির্ধারিত') ?></span>
                             <span><?= format_currency($currency, $expense['amount']) ?></span>
                         </li>
                     <?php endforeach; ?>
