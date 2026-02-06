@@ -4,6 +4,8 @@ require __DIR__ . '/includes/header.php';
 
 $currency = $settings['currency'] ?? '৳';
 $message = '';
+$showPrintPrompt = false;
+$savedMemoNo = '';
 
 $customers = fetch_all('SELECT id, name FROM customers ORDER BY name ASC');
 $products = fetch_all('SELECT id, name, selling_price, stock FROM products ORDER BY name ASC');
@@ -23,10 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prices = $_POST['price'] ?? [];
 
     $items = [];
+    $usedProducts = [];
+    $hasDuplicate = false;
     foreach ($productIds as $index => $productId) {
         $productId = (int) $productId;
         $quantity = (int) ($quantities[$index] ?? 0);
         $price = (float) ($prices[$index] ?? 0);
+        if ($productId > 0) {
+            if (in_array($productId, $usedProducts, true)) {
+                $hasDuplicate = true;
+                break;
+            }
+            $usedProducts[] = $productId;
+        }
         if ($productId > 0 && $quantity > 0 && $price > 0) {
             $items[] = [
                 'product_id' => $productId,
@@ -37,7 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($memoNo !== '' && !empty($items)) {
+    if ($hasDuplicate) {
+        $message = 'একই পণ্য একাধিকবার যুক্ত করা যাবে না।';
+    } elseif ($memoNo !== '' && !empty($items)) {
         $total = array_sum(array_column($items, 'line_total'));
         if ($paid > $total) {
             $paid = $total;
@@ -75,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $pdo->commit();
                 $message = 'মেমো সংরক্ষণ হয়েছে।';
+                $showPrintPrompt = true;
+                $savedMemoNo = $memoNo;
                 $generatedMemo = '';
             } catch (Throwable $error) {
                 $pdo->rollBack();
@@ -178,8 +193,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h6 class="section-title">নির্দেশনা</h6>
             <ul class="small text-muted mb-0">
                 <li>একাধিক পণ্য যোগ করা যাবে।</li>
+                <li>একই পণ্য একাধিকবার যুক্ত করা যাবে না।</li>
                 <li>বাকি থাকলে ডিউ রিপোর্টে দেখাবে।</li>
-                <li>স্টক কমলে ইনভেন্টরি থেকে আপডেট করুন।</li>
             </ul>
         </div>
     </div>
@@ -205,6 +220,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         dueAmount.value = Math.max(total - paid, 0).toFixed(2);
     };
 
+    const isDuplicateProduct = (selectedValue, currentRow) => {
+        return Array.from(memoItems.querySelectorAll('.product-select')).some(select => {
+            if (select === currentRow.querySelector('.product-select')) {
+                return false;
+            }
+            return select.value === selectedValue && selectedValue !== '';
+        });
+    };
+
     const bindRow = (row) => {
         const productSelect = row.querySelector('.product-select');
         const priceInput = row.querySelector('.price-input');
@@ -214,6 +238,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         productSelect.addEventListener('change', () => {
             const selected = productSelect.options[productSelect.selectedIndex];
+            if (isDuplicateProduct(productSelect.value, row)) {
+                Swal.fire('একই পণ্য দুইবার যোগ করা যাবে না।');
+                productSelect.value = '';
+                priceInput.value = '';
+                stockCell.textContent = '0';
+                updateTotals();
+                return;
+            }
             const price = selected?.dataset?.price || 0;
             const stock = selected?.dataset?.stock || 0;
             priceInput.value = price;
@@ -247,5 +279,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     });
 
     updateTotals();
+
+    const showPrintPrompt = <?= $showPrintPrompt ? 'true' : 'false' ?>;
+    const savedMemoNo = <?= json_encode($savedMemoNo) ?>;
+    if (showPrintPrompt && savedMemoNo) {
+        Swal.fire({
+            title: 'মেমো প্রিন্ট করবেন?',
+            text: 'আপনি কি এখনই মেমো প্রিন্ট/পিডিএফ করতে চান?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ',
+            cancelButtonText: 'না'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `memo_print.php?memo=${encodeURIComponent(savedMemoNo)}`;
+            } else {
+                window.location.href = 'sales.php';
+            }
+        });
+    }
 </script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

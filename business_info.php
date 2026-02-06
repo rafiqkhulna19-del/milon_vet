@@ -7,6 +7,7 @@ $business = fetch_one('SELECT * FROM business_info ORDER BY id DESC LIMIT 1');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $businessName = trim($_POST['business_name'] ?? '');
+    $logoUrl = trim($_POST['logo_url'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $address = trim($_POST['address'] ?? '');
@@ -16,9 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         [$pdo] = db_connection();
         if ($pdo) {
             if ($business) {
-                $stmt = $pdo->prepare('UPDATE business_info SET business_name = :business_name, phone = :phone, email = :email, address = :address, currency = :currency WHERE id = :id');
+                $stmt = $pdo->prepare('UPDATE business_info SET business_name = :business_name, logo_url = :logo_url, phone = :phone, email = :email, address = :address, currency = :currency WHERE id = :id');
                 $stmt->execute([
                     ':business_name' => $businessName,
+                    ':logo_url' => $logoUrl,
                     ':phone' => $phone,
                     ':email' => $email,
                     ':address' => $address,
@@ -26,9 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id' => $business['id'],
                 ]);
             } else {
-                $stmt = $pdo->prepare('INSERT INTO business_info (business_name, phone, email, address, currency) VALUES (:business_name, :phone, :email, :address, :currency)');
+                $stmt = $pdo->prepare('INSERT INTO business_info (business_name, logo_url, phone, email, address, currency) VALUES (:business_name, :logo_url, :phone, :email, :address, :currency)');
                 $stmt->execute([
                     ':business_name' => $businessName,
+                    ':logo_url' => $logoUrl,
                     ':phone' => $phone,
                     ':email' => $email,
                     ':address' => $address,
@@ -54,6 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-md-6">
                     <label class="form-label">ব্যবসার নাম</label>
                     <input type="text" name="business_name" class="form-control" value="<?= htmlspecialchars($business['business_name'] ?? '') ?>" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">লোগো URL</label>
+                    <input type="text" name="logo_url" class="form-control" value="<?= htmlspecialchars($business['logo_url'] ?? '') ?>" placeholder="https://">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">ফোন</label>

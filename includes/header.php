@@ -45,11 +45,16 @@ $current = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="bg-body-tertiary">
-<nav class="navbar navbar-expand-lg border-bottom bg-body">
+    <nav class="navbar navbar-expand-lg border-bottom bg-body">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="dashboard.php">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm" id="sidebarToggle" type="button">
+                <i class="bi bi-layout-sidebar-inset"></i>
+            </button>
+            <a class="navbar-brand fw-bold" href="dashboard.php">
             <?= htmlspecialchars($settings['app_name']) ?>
-        </a>
+            </a>
+        </div>
         <div class="d-flex gap-2 align-items-center">
             <button class="btn btn-outline-secondary btn-sm" id="themeToggle" type="button">
                 <i class="bi bi-moon-stars"></i> <span class="d-none d-md-inline">লাইট/ডার্ক</span>
@@ -63,9 +68,8 @@ $current = basename($_SERVER['PHP_SELF']);
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <aside class="col-lg-2 d-none d-lg-block border-end min-vh-100 bg-body sidebar">
+        <aside class="col-lg-3 d-none d-lg-block border-end min-vh-100 bg-body sidebar">
             <div class="p-3">
-                <h6 class="text-uppercase text-muted">মেনু</h6>
                 <ul class="nav nav-pills flex-column gap-1">
                     <?php foreach ($pages as $file => $meta): ?>
                         <li class="nav-item">
@@ -77,7 +81,7 @@ $current = basename($_SERVER['PHP_SELF']);
                 </ul>
             </div>
         </aside>
-        <main class="col-lg-10 px-4 py-4">
+        <main class="col-lg-9 px-4 py-4">
             <?php if (!empty($db_error)): ?>
                 <div class="alert alert-danger">
                     ডাটাবেসে সংযোগ হয়নি: <?= htmlspecialchars($db_error) ?>

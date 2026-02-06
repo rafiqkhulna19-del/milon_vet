@@ -16,6 +16,7 @@ CREATE TABLE users (
 CREATE TABLE business_info (
     id INT AUTO_INCREMENT PRIMARY KEY,
     business_name VARCHAR(150) NOT NULL,
+    logo_url VARCHAR(255),
     phone VARCHAR(30),
     email VARCHAR(100),
     address VARCHAR(255),
@@ -139,8 +140,8 @@ CREATE TABLE liabilities (
 INSERT INTO users (name, username, password_hash, role, email, phone, address)
 VALUES ('Milon Admin', 'admin', '$2y$10$ZfWGYLfi9aYxHmyo7LIsIu0V4Um5mO4c4l9kH6cYg8e2PH6mEwO4y', 'Owner', 'owner@milonvet.com', '+8801XXXXXXXXX', 'ঢাকা, বাংলাদেশ');
 
-INSERT INTO business_info (business_name, phone, email, address, currency)
-VALUES ('Milon Veterinary', '+8801XXXXXXXXX', 'info@milonvet.com', 'ফার্মগেট, ঢাকা', '৳');
+INSERT INTO business_info (business_name, logo_url, phone, email, address, currency)
+VALUES ('Milon Veterinary', '', '+8801XXXXXXXXX', 'info@milonvet.com', 'ফার্মগেট, ঢাকা', '৳');
 
 INSERT INTO categories (name, description) VALUES
 ('ভেট মেডিসিন', 'ভেটেরিনারি মেডিসিন'),
