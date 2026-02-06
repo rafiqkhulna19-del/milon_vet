@@ -19,7 +19,6 @@ $pages = [
     'inventory.php' => ['label' => 'ইনভেন্টরি', 'icon' => 'bi-box-seam'],
     'reports.php' => ['label' => 'রিপোর্ট', 'icon' => 'bi-clipboard-data'],
     'sales.php' => ['label' => 'মেমো ম্যানেজমেন্ট', 'icon' => 'bi-receipt'],
-    'memo_print.php' => ['label' => 'মেমো প্রিন্ট', 'icon' => 'bi-printer'],
     'new_memo.php' => ['label' => 'নতুন মেমো', 'icon' => 'bi-journal-plus'],
     'purchases.php' => ['label' => 'পণ্য ক্রয়', 'icon' => 'bi-cart-plus'],
     'customers.php' => ['label' => 'কাস্টমার ম্যানেজমেন্ট', 'icon' => 'bi-people'],

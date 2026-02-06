@@ -58,18 +58,27 @@ CREATE TABLE products (
 
 CREATE TABLE purchases (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
     supplier_id INT,
-    quantity INT NOT NULL,
-    unit_cost DECIMAL(10, 2) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    net_amount DECIMAL(10, 2) NOT NULL,
     paid_amount DECIMAL(10, 2) NOT NULL,
     due_amount DECIMAL(10, 2) NOT NULL,
     payment_type VARCHAR(20) NOT NULL,
     purchase_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+);
+
+CREATE TABLE purchase_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    purchase_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_cost DECIMAL(10, 2) NOT NULL,
+    line_total DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (purchase_id) REFERENCES purchases(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
 CREATE TABLE sales (
