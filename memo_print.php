@@ -52,9 +52,11 @@ if ($memo) {
         <div class="card p-4" id="memoPrintArea">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
+                    <div class="text-uppercase text-muted small">Sales Invoice</div>
                     <h4 class="fw-bold mb-1"><?= htmlspecialchars($business['business_name'] ?? $settings['app_name']) ?></h4>
                     <div class="text-muted small"><?= htmlspecialchars($business['address'] ?? '') ?></div>
                     <div class="text-muted small"><?= htmlspecialchars($business['phone'] ?? '') ?></div>
+                    <div class="text-muted small"><?= htmlspecialchars($business['email'] ?? '') ?></div>
                 </div>
                 <div class="text-end">
                     <div class="fw-semibold">মেমো নং: <?= htmlspecialchars($memo['memo_no'] ?? '---') ?></div>
@@ -62,16 +64,16 @@ if ($memo) {
                 </div>
             </div>
             <hr>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between flex-wrap gap-3">
                 <div>
                     <div class="fw-semibold">কাস্টমার</div>
                     <div><?= htmlspecialchars($memo['customer'] ?? 'ওয়াক-ইন') ?></div>
                     <div class="text-muted small"><?= htmlspecialchars($memo['customer_phone'] ?? '') ?></div>
                 </div>
-                <div>
-                    <div class="fw-semibold">পেমেন্ট</div>
+                <div class="invoice-summary">
+                    <div>মোট: <?= $memo ? format_currency($currency, $memo['total']) : '---' ?></div>
                     <div>পরিশোধ: <?= $memo ? format_currency($currency, $memo['paid']) : '---' ?></div>
-                    <div>বাকি: <?= $memo ? format_currency($currency, $due) : '---' ?></div>
+                    <div class="fw-semibold">বাকি: <?= $memo ? format_currency($currency, $due) : '---' ?></div>
                 </div>
             </div>
             <div class="table-responsive mt-3">
@@ -107,15 +109,13 @@ if ($memo) {
                     </tbody>
                 </table>
             </div>
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted small">প্রস্তুতকারী: <?= htmlspecialchars($_SESSION['user']['name'] ?? 'ম্যানেজার') ?></div>
                 <div class="text-end">
-                    <div class="fw-semibold">মোট: <?= $memo ? format_currency($currency, $memo['total']) : '---' ?></div>
-                    <div class="text-muted">পরিশোধ: <?= $memo ? format_currency($currency, $memo['paid']) : '---' ?></div>
-                    <div class="fw-semibold">বাকি: <?= $memo ? format_currency($currency, $due) : '---' ?></div>
+                    <div class="fw-semibold">নেট মোট: <?= $memo ? format_currency($currency, $memo['total']) : '---' ?></div>
+                    <div class="text-muted">ধন্যবাদ।</div>
                 </div>
             </div>
-            <hr>
-            <p class="text-center text-muted small mb-0">আপনার ব্যবসার জন্য ধন্যবাদ।</p>
         </div>
     </div>
 </div>

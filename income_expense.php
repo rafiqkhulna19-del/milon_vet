@@ -13,6 +13,11 @@ $incomeTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM incom
 ]);
 $incomeTotal = $incomeTotalRow['total'] ?? 0;
 
+$autoIncomeRow = fetch_one('SELECT COALESCE(SUM(paid), 0) AS total FROM sales WHERE DATE(created_at) = :today', [
+    ':today' => $today,
+]);
+$autoIncome = $autoIncomeRow['total'] ?? 0;
+
 $expenseRows = fetch_all('SELECT e.amount, c.name AS category
     FROM expenses e
     LEFT JOIN expense_categories c ON c.id = e.expense_category_id
@@ -23,14 +28,23 @@ $expenseTotalRow = fetch_one('SELECT COALESCE(SUM(amount), 0) AS total FROM expe
     ':today' => $today,
 ]);
 $expenseTotal = $expenseTotalRow['total'] ?? 0;
+
+$autoExpenseRow = fetch_one('SELECT COALESCE(SUM(paid_amount), 0) AS total FROM purchases WHERE purchase_date = :today', [
+    ':today' => $today,
+]);
+$autoExpense = $autoExpenseRow['total'] ?? 0;
 ?>
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card p-4">
             <h5 class="section-title">আজকের আয়</h5>
             <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>সেলস ইনকাম (অটো)</span>
+                    <span><?= format_currency($currency, $autoIncome) ?></span>
+                </li>
                 <?php if (empty($incomeRows)): ?>
-                    <li class="list-group-item text-muted text-center">আজকের কোন আয় নেই।</li>
+                    <li class="list-group-item text-muted text-center">আজকের কোন অতিরিক্ত আয় নেই।</li>
                 <?php else: ?>
                     <?php foreach ($incomeRows as $income): ?>
                         <li class="list-group-item d-flex justify-content-between">
@@ -41,7 +55,7 @@ $expenseTotal = $expenseTotalRow['total'] ?? 0;
                 <?php endif; ?>
                 <li class="list-group-item d-flex justify-content-between fw-bold">
                     <span>মোট</span>
-                    <span><?= format_currency($currency, $incomeTotal) ?></span>
+                    <span><?= format_currency($currency, $incomeTotal + $autoIncome) ?></span>
                 </li>
             </ul>
         </div>
@@ -50,6 +64,10 @@ $expenseTotal = $expenseTotalRow['total'] ?? 0;
         <div class="card p-4">
             <h5 class="section-title">আজকের ব্যয়</h5>
             <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>পণ্য ক্রয় (অটো)</span>
+                    <span><?= format_currency($currency, $autoExpense) ?></span>
+                </li>
                 <?php if (empty($expenseRows)): ?>
                     <li class="list-group-item text-muted text-center">আজকের কোন ব্যয় নেই।</li>
                 <?php else: ?>
@@ -62,7 +80,7 @@ $expenseTotal = $expenseTotalRow['total'] ?? 0;
                 <?php endif; ?>
                 <li class="list-group-item d-flex justify-content-between fw-bold">
                     <span>মোট</span>
-                    <span><?= format_currency($currency, $expenseTotal) ?></span>
+                    <span><?= format_currency($currency, $expenseTotal + $autoExpense) ?></span>
                 </li>
             </ul>
         </div>

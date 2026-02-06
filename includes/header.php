@@ -18,6 +18,7 @@ $pages = [
     'assets_liabilities.php' => ['label' => 'দায়-পরিসম্পদ', 'icon' => 'bi-bar-chart'],
     'inventory.php' => ['label' => 'ইনভেন্টরি', 'icon' => 'bi-box-seam'],
     'reports.php' => ['label' => 'রিপোর্ট', 'icon' => 'bi-clipboard-data'],
+    'ledger.php' => ['label' => 'ক্রয়/বিক্রয় লেজার', 'icon' => 'bi-journal-text'],
     'sales.php' => ['label' => 'মেমো ম্যানেজমেন্ট', 'icon' => 'bi-receipt'],
     'new_memo.php' => ['label' => 'নতুন মেমো', 'icon' => 'bi-journal-plus'],
     'purchases.php' => ['label' => 'পণ্য ক্রয়', 'icon' => 'bi-cart-plus'],
@@ -62,7 +63,7 @@ $current = basename($_SERVER['PHP_SELF']);
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <aside class="col-lg-2 d-none d-lg-block border-end min-vh-100 bg-body">
+        <aside class="col-lg-2 d-none d-lg-block border-end min-vh-100 bg-body sidebar">
             <div class="p-3">
                 <h6 class="text-uppercase text-muted">মেনু</h6>
                 <ul class="nav nav-pills flex-column gap-1">
