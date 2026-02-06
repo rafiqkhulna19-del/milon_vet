@@ -2,6 +2,22 @@
 $pageTitle = 'ক্যাটেগরি ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
 
+$message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    if ($name !== '') {
+        [$pdo] = db_connection();
+        if ($pdo) {
+            $stmt = $pdo->prepare('INSERT INTO categories (name) VALUES (:name)');
+            $stmt->execute([':name' => $name]);
+            $message = 'ক্যাটেগরি যোগ হয়েছে।';
+        }
+    } else {
+        $message = 'ক্যাটেগরি নাম দিন।';
+    }
+}
+
 $categories = fetch_all('SELECT c.id, c.name, COUNT(p.id) AS product_count
     FROM categories c
     LEFT JOIN products p ON p.category_id = c.id
@@ -12,9 +28,12 @@ $categories = fetch_all('SELECT c.id, c.name, COUNT(p.id) AS product_count
     <div class="col-lg-5">
         <div class="card p-4">
             <h5 class="section-title">নতুন ক্যাটেগরি</h5>
-            <form class="vstack gap-3">
-                <input class="form-control" type="text" placeholder="ক্যাটেগরি নাম">
-                <button class="btn btn-primary" type="button">সংরক্ষণ করুন</button>
+            <?php if ($message): ?>
+                <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
+            <?php endif; ?>
+            <form class="vstack gap-3" method="post">
+                <input class="form-control" type="text" name="name" placeholder="ক্যাটেগরি নাম" required>
+                <button class="btn btn-primary" type="submit">সংরক্ষণ করুন</button>
             </form>
         </div>
     </div>

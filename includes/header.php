@@ -20,6 +20,7 @@ $pages = [
     'reports.php' => ['label' => 'রিপোর্ট', 'icon' => 'bi-clipboard-data'],
     'sales.php' => ['label' => 'সেলস ম্যানেজমেন্ট', 'icon' => 'bi-receipt'],
     'memo_print.php' => ['label' => 'মেমো প্রিন্ট', 'icon' => 'bi-printer'],
+    'purchases.php' => ['label' => 'পণ্য ক্রয়', 'icon' => 'bi-cart-plus'],
     'customers.php' => ['label' => 'কাস্টমার ম্যানেজমেন্ট', 'icon' => 'bi-people'],
     'dues.php' => ['label' => 'ডিউ ম্যানেজমেন্ট', 'icon' => 'bi-wallet2'],
     'expenses.php' => ['label' => 'খরচ ম্যানেজমেন্ট', 'icon' => 'bi-journal-minus'],
@@ -37,6 +38,9 @@ $current = basename($_SERVER['PHP_SELF']);
     <title><?= htmlspecialchars($settings['app_name']) ?> | <?= htmlspecialchars($pageTitle ?? 'ড্যাশবোর্ড') ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="bg-body-tertiary">

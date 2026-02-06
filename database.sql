@@ -54,6 +54,18 @@ CREATE TABLE products (
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
+CREATE TABLE purchases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    supplier_id INT,
+    quantity INT NOT NULL,
+    unit_cost DECIMAL(10, 2) NOT NULL,
+    purchase_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+);
+
 CREATE TABLE sales (
     id INT AUTO_INCREMENT PRIMARY KEY,
     memo_no VARCHAR(50) NOT NULL,
