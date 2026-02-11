@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'পণ্য ক্রয়';
 require __DIR__ . '/includes/header.php';
 
@@ -97,6 +97,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['purchase_submit'])) {
                     ]);
                 }
 
+                if ($paidAmount > 0) {
+                    $accountId = get_account_id_by_type_or_name('cash');
+                    $categoryId = ensure_transaction_category('Purchase', 'expense');
+                    if ($accountId && $categoryId) {
+                        create_transaction('expense', $categoryId, $accountId, (float) $paidAmount, $purchaseDate, 'Purchase #' . $purchaseId);
+                    }
+                }
+
                 $pdo->commit();
                 $message = 'ক্রয় তথ্য সংরক্ষণ হয়েছে।';
             } catch (Throwable $error) {
@@ -130,6 +138,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_submit'])) {
                 ':amount' => $amount,
                 ':id' => $supplierId,
             ]);
+
+            $expenseCategory = fetch_one('SELECT name FROM expense_categories WHERE id = :id', [
+                ':id' => $categoryId,
+            ]);
+            $categoryName = $expenseCategory['name'] ?? 'Supplier Payment';
+            $txnCategoryId = ensure_transaction_category($categoryName, 'expense');
+            $accountId = get_account_id_by_type_or_name('cash');
+            if ($txnCategoryId && $accountId) {
+                create_transaction('expense', $txnCategoryId, $accountId, (float) $amount, $paymentDate, 'Supplier payment');
+            }
 
             $paymentMessage = 'বকেয়া পেমেন্ট সংরক্ষণ হয়েছে।';
         }

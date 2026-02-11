@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'নতুন মেমো';
 require __DIR__ . '/includes/header.php';
 
@@ -7,8 +7,16 @@ $message = '';
 $showPrintPrompt = false;
 $savedMemoNo = '';
 
-$customers = fetch_all('SELECT id, name FROM customers ORDER BY name ASC');
+$customers = fetch_all('SELECT id, name, phone, address FROM customers ORDER BY name ASC');
 $products = fetch_all('SELECT id, name, selling_price, stock FROM products ORDER BY name ASC');
+$topProducts = fetch_all("
+    SELECT p.id, p.name, p.selling_price, p.stock, COALESCE(SUM(si.quantity), 0) AS sold_qty
+    FROM products p
+    LEFT JOIN sale_items si ON si.product_id = p.id
+    GROUP BY p.id, p.name, p.selling_price, p.stock
+    ORDER BY sold_qty DESC, p.name ASC
+    LIMIT 6
+");
 
 $memoSeedRow = fetch_one('SELECT COUNT(*) AS total FROM sales');
 $memoSeed = (int) ($memoSeedRow['total'] ?? 0) + 1;
@@ -19,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $memoNo = trim($_POST['memo_no'] ?? '');
     $paymentMethod = trim($_POST['payment_method'] ?? '');
     $paid = (float) ($_POST['paid'] ?? 0);
+    $discount = (float) ($_POST['discount'] ?? 0);
 
     $productIds = $_POST['product_id'] ?? [];
     $quantities = $_POST['quantity'] ?? [];
@@ -51,7 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($hasDuplicate) {
         $message = 'একই পণ্য একাধিকবার যুক্ত করা যাবে না।';
     } elseif ($memoNo !== '' && !empty($items)) {
-        $total = array_sum(array_column($items, 'line_total'));
+        $subtotal = array_sum(array_column($items, 'line_total'));
+        if ($discount < 0) {
+            $discount = 0;
+        }
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
+        }
+        $net = $subtotal - $discount;
+        $rounding = round($net, 0) - $net;
+        $total = $net + $rounding;
         if ($paid > $total) {
             $paid = $total;
         }
@@ -60,10 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo) {
             $pdo->beginTransaction();
             try {
-                $stmt = $pdo->prepare('INSERT INTO sales (memo_no, customer_id, total, paid, payment_method) VALUES (:memo_no, :customer_id, :total, :paid, :payment_method)');
+                $stmt = $pdo->prepare('INSERT INTO sales (memo_no, customer_id, subtotal, discount, rounding, total, paid, payment_method) VALUES (:memo_no, :customer_id, :subtotal, :discount, :rounding, :total, :paid, :payment_method)');
                 $stmt->execute([
                     ':memo_no' => $memoNo,
                     ':customer_id' => $customerId ?: null,
+                    ':subtotal' => $subtotal,
+                    ':discount' => $discount,
+                    ':rounding' => $rounding,
                     ':total' => $total,
                     ':paid' => $paid,
                     ':payment_method' => $paymentMethod,
@@ -84,6 +105,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':quantity' => $item['quantity'],
                         ':id' => $item['product_id'],
                     ]);
+                }
+
+                if ($paid > 0) {
+                    $accountKey = 'cash';
+                    if (mb_strpos($paymentMethod, 'ব্যাংক') !== false) {
+                        $accountKey = 'bank';
+                    } elseif (mb_strpos($paymentMethod, 'মোবাইল') !== false) {
+                        $accountKey = 'bkash';
+                    }
+                    $accountId = get_account_id_by_type_or_name($accountKey);
+                    $categoryId = ensure_transaction_category('Sales', 'income');
+                    if ($accountId && $categoryId) {
+                        create_transaction('income', $categoryId, $accountId, (float) $paid, date('Y-m-d'), 'Memo ' . $memoNo);
+                    }
                 }
 
                 $pdo->commit();
@@ -115,10 +150,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="memo_no" value="<?= htmlspecialchars($generatedMemo) ?>" id="memoNoField">
                 <div class="col-md-6">
                     <label class="form-label">কাস্টমার</label>
-                    <select class="form-select" name="customer_id">
+                    <select class="form-select" name="customer_id" id="customerSelect">
                         <option value="">ওয়াক-ইন</option>
                         <?php foreach ($customers as $customer): ?>
-                            <option value="<?= (int) $customer['id'] ?>"><?= htmlspecialchars($customer['name']) ?></option>
+                            <option value="<?= (int) $customer['id'] ?>"
+                                data-phone="<?= htmlspecialchars($customer['phone'] ?? '') ?>"
+                                data-address="<?= htmlspecialchars($customer['address'] ?? '') ?>">
+                                <?= htmlspecialchars($customer['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -130,8 +168,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="মোবাইল ব্যাংকিং">মোবাইল ব্যাংকিং</option>
                     </select>
                 </div>
-
                 <div class="col-12">
+                    <div class="card border-0 bg-body-tertiary p-3 mb-3">
+                        <div class="row g-3 align-items-end" id="addItemForm">
+                            <div class="col-md-5">
+                                <label class="form-label">পণ্য</label>
+                                <select class="form-select" id="addProductSelect">
+                                    <option value="">পণ্য নির্বাচন করুন</option>
+                                    <?php foreach ($products as $product): ?>
+                                        <option value="<?= (int) $product['id'] ?>"
+                                            data-price="<?= htmlspecialchars($product['selling_price']) ?>"
+                                            data-stock="<?= (int) $product['stock'] ?>">
+                                            <?= htmlspecialchars($product['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">স্টক</label>
+                                <input class="form-control" type="text" id="addStock" value="0" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">পরিমাণ</label>
+                                <input class="form-control" type="number" id="addQty" min="1" value="1">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">দাম</label>
+                                <input class="form-control" type="number" step="0.01" id="addPrice">
+                            </div>
+                            <div class="col-md-1 d-grid">
+                                <button class="btn btn-primary" type="button" id="addItemBtn">+</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle" id="memoItems">
                             <thead>
@@ -145,33 +214,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <select class="form-select product-select" name="product_id[]" required>
-                                            <option value="">পণ্য নির্বাচন করুন</option>
-                                            <?php foreach ($products as $product): ?>
-                                                <option value="<?= (int) $product['id'] ?>" data-price="<?= htmlspecialchars($product['selling_price']) ?>" data-stock="<?= (int) $product['stock'] ?>">
-                                                    <?= htmlspecialchars($product['name']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                    <td class="stock-cell">0</td>
-                                    <td><input class="form-control qty-input" type="number" name="quantity[]" min="1" value="1" required></td>
-                                    <td><input class="form-control price-input" type="number" step="0.01" name="price[]" required></td>
-                                    <td class="line-total">0</td>
-                                    <td>
-                                        <button class="btn btn-outline-danger btn-sm remove-row" type="button">×</button>
-                                    </td>
+                                <tr class="empty-row">
+                                    <td colspan="6" class="text-center text-muted">একাধিক পণ্য যোগ করুন</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm" type="button" id="addRow">আরও পণ্য যোগ করুন</button>
                 </div>
-
                 <div class="col-md-4">
-                    <label class="form-label">মোট</label>
+                    <label class="form-label">সাব টোটাল</label>
+                    <input class="form-control" type="text" id="subTotal" value="0" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">ডিসকাউন্ট</label>
+                    <input class="form-control" type="number" step="0.01" name="discount" id="discountAmount" value="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">রাউন্ডিং</label>
+                    <input class="form-control" type="text" id="roundingAmount" value="0" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">নীট মোট</label>
                     <input class="form-control" type="text" id="grandTotal" value="0" readonly>
                 </div>
                 <div class="col-md-4">
@@ -190,113 +253,203 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="col-lg-3">
         <div class="card p-4">
-            <h6 class="section-title">নির্দেশনা</h6>
-            <ul class="small text-muted mb-0">
-                <li>একাধিক পণ্য যোগ করা যাবে।</li>
-                <li>একই পণ্য একাধিকবার যুক্ত করা যাবে না।</li>
-                <li>বাকি থাকলে ডিউ রিপোর্টে দেখাবে।</li>
-            </ul>
+            <h6 class="section-title">টপ সেলিং</h6>
+            <?php if (!empty($topProducts)): ?>
+                <div class="d-grid gap-2">
+                    <?php foreach ($topProducts as $product): ?>
+                        <button class="btn btn-outline-secondary btn-sm text-start top-product" type="button"
+                            data-id="<?= (int) $product['id'] ?>" data-name="<?= htmlspecialchars($product['name']) ?>"
+                            data-price="<?= htmlspecialchars($product['selling_price']) ?>"
+                            data-stock="<?= (int) $product['stock'] ?>">
+                            <?= htmlspecialchars($product['name']) ?> । <?= htmlspecialchars($product['selling_price']) ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p class="small text-muted mb-0">ডাটা নেই</p>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 <script>
-    const memoItems = document.getElementById('memoItems');
-    const addRowBtn = document.getElementById('addRow');
-    const grandTotal = document.getElementById('grandTotal');
-    const paidAmount = document.getElementById('paidAmount');
-    const dueAmount = document.getElementById('dueAmount');
+    jQuery(function ($) {
+        const $memoItems = $('#memoItems');
+        const $addItemForm = $('#addItemForm');
+        const $addProductSelect = $('#addProductSelect');
+        const $addQty = $('#addQty');
+        const $addPrice = $('#addPrice');
+        const $addStock = $('#addStock');
+        const $addItemBtn = $('#addItemBtn');
+        const $subTotal = $('#subTotal');
+        const $discountAmount = $('#discountAmount');
+        const $roundingAmount = $('#roundingAmount');
+        const $grandTotal = $('#grandTotal');
+        const $paidAmount = $('#paidAmount');
+        const $dueAmount = $('#dueAmount');
+        const $topProductButtons = $('.top-product');
+        const $customerSelect = $('#customerSelect');
 
-    const updateTotals = () => {
-        let total = 0;
-        memoItems.querySelectorAll('tbody tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.qty-input').value || 0);
-            const price = parseFloat(row.querySelector('.price-input').value || 0);
-            const lineTotal = qty * price;
-            row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
-            total += lineTotal;
+        const formatCustomerOption = (customer) => {
+            if (!customer.id) return customer.text;
+            const phone = $(customer.element).data('phone') || '';
+            const address = $(customer.element).data('address') || '';
+            return $(
+                `<div class="d-flex flex-column">
+                    <span class="fw-semibold">${customer.text}</span>
+                    <span class="text-muted small">${phone}${address ? ' • ' + address : ''}</span>
+                </div>`
+            );
+        };
+
+        const formatCustomerSelection = (customer) => {
+            if (!customer.id) return customer.text;
+            const address = $(customer.element).data('address') || '';
+            return $(
+                `<span>${customer.text}${address ? `<span class="text-muted small">\n${address}</span>` : ''}</span>`
+            );
+        };
+
+        $customerSelect.select2({
+            width: '100%',
+            templateResult: formatCustomerOption,
+            templateSelection: formatCustomerSelection,
         });
-        grandTotal.value = total.toFixed(2);
-        const paid = parseFloat(paidAmount.value || 0);
-        dueAmount.value = Math.max(total - paid, 0).toFixed(2);
-    };
 
-    const isDuplicateProduct = (selectedValue, currentRow) => {
-        return Array.from(memoItems.querySelectorAll('.product-select')).some(select => {
-            if (select === currentRow.querySelector('.product-select')) {
-                return false;
+        $addProductSelect.select2({
+            width: '100%'
+        });
+
+        const updateTotals = () => {
+            let subtotal = 0;
+            $memoItems.find('tbody tr').each(function () {
+                const $row = $(this);
+                if ($row.hasClass('empty-row')) return;
+                const qty = parseFloat($row.find('.qty-input').val() || 0);
+                const price = parseFloat($row.find('.price-input').val() || 0);
+                const lineTotal = qty * price;
+                $row.find('.line-total').text(lineTotal.toFixed(2));
+                subtotal += lineTotal;
+            });
+            $subTotal.val(subtotal.toFixed(2));
+            let discount = parseFloat($discountAmount.val() || 0);
+            if (discount < 0) discount = 0;
+            if (discount > subtotal) discount = subtotal;
+            if (discount !== parseFloat($discountAmount.val() || 0)) {
+                $discountAmount.val(discount.toFixed(2));
             }
-            return select.value === selectedValue && selectedValue !== '';
-        });
-    };
+            const net = subtotal - discount;
+            const rounding = Math.round(net) - net;
+            const total = net + rounding;
+            $roundingAmount.val(rounding.toFixed(2));
+            $grandTotal.val(total.toFixed(2));
+            const paid = parseFloat($paidAmount.val() || 0);
+            $dueAmount.val(Math.max(total - paid, 0).toFixed(2));
+        };
 
-    const bindRow = (row) => {
-        const productSelect = row.querySelector('.product-select');
-        const priceInput = row.querySelector('.price-input');
-        const stockCell = row.querySelector('.stock-cell');
-        const qtyInput = row.querySelector('.qty-input');
-        const removeBtn = row.querySelector('.remove-row');
+        const isDuplicateProduct = (selectedValue, $currentRow) => {
+            let isDuplicate = false;
+            $memoItems.find('input[name="product_id[]"]').each(function () {
+                if ($currentRow && this === $currentRow.find('input[name="product_id[]"]')[0]) return;
+                if (this.value === selectedValue && selectedValue !== '') {
+                    isDuplicate = true;
+                    return false;
+                }
+            });
+            return isDuplicate;
+        };
 
-        productSelect.addEventListener('change', () => {
-            const selected = productSelect.options[productSelect.selectedIndex];
-            if (isDuplicateProduct(productSelect.value, row)) {
-                Swal.fire('একই পণ্য দুইবার যোগ করা যাবে না।');
-                productSelect.value = '';
-                priceInput.value = '';
-                stockCell.textContent = '0';
-                updateTotals();
+        const bindRow = ($row) => {
+            const $priceInput = $row.find('.price-input');
+            const $qtyInput = $row.find('.qty-input');
+            const $removeBtn = $row.find('.remove-row');
+
+            $priceInput.add($qtyInput).on('input', updateTotals);
+            $removeBtn.on('click', () => {
+                if ($memoItems.find('tbody tr').length > 1) {
+                    $row.remove();
+                    updateTotals();
+                    toggleEmptyRow();
+                }
+            });
+        };
+
+        const toggleEmptyRow = () => {
+            const $body = $memoItems.find('tbody');
+            const hasRows = $body.find('tr:not(.empty-row)').length > 0;
+            $body.find('.empty-row').toggleClass('d-none', hasRows);
+        };
+
+        const addRow = (productId, name, stock, price) => {
+            if (isDuplicateProduct(String(productId))) {
+                Swal.fire('দুঃখিত', 'এই পণ্য ইতিমধ্যে যুক্ত করা হয়েছে।', 'warning');
                 return;
             }
-            const price = selected?.dataset?.price || 0;
-            const stock = selected?.dataset?.stock || 0;
-            priceInput.value = price;
-            stockCell.textContent = stock;
+            const $row = $(
+                `<tr>
+                    <td>
+                        ${name}
+                        <input type="hidden" name="product_id[]" value="${productId}">
+                    </td>
+                    <td>${stock}</td>
+                    <td><input class="form-control qty-input" type="number" name="quantity[]" min="1" value="1"></td>
+                    <td><input class="form-control price-input" type="number" step="0.01" name="price[]" value="${price}"></td>
+                    <td class="line-total">0</td>
+                    <td><button class="btn btn-outline-danger btn-sm remove-row" type="button">×</button></td>
+                </tr>`
+            );
+            $memoItems.find('tbody').append($row);
+            bindRow($row);
+            toggleEmptyRow();
             updateTotals();
-        });
+        };
 
-        [priceInput, qtyInput].forEach(input => input.addEventListener('input', updateTotals));
-        removeBtn.addEventListener('click', () => {
-            if (memoItems.querySelectorAll('tbody tr').length > 1) {
-                row.remove();
-                updateTotals();
+        $addProductSelect.on('change', function () {
+            const option = this.options[this.selectedIndex];
+            if (!option || !option.value) {
+                $addStock.val(0);
+                $addPrice.val('');
+                return;
             }
+            $addStock.val(option.dataset.stock || 0);
+            $addPrice.val(option.dataset.price || '');
         });
-    };
 
-    memoItems.querySelectorAll('tbody tr').forEach(bindRow);
-    paidAmount.addEventListener('input', updateTotals);
+        $addItemBtn.on('click', () => {
+            const option = $addProductSelect[0].options[$addProductSelect[0].selectedIndex];
+            const productId = option?.value;
+            if (!productId) {
+                Swal.fire('পণ্য নির্বাচন করুন', 'যোগ করার আগে পণ্য নির্বাচন করুন।', 'warning');
+                return;
+            }
+            const qty = parseFloat($addQty.val() || 0);
+            const price = parseFloat($addPrice.val() || 0);
+            if (qty <= 0 || price <= 0) {
+                Swal.fire('ভুল ইনপুট', 'পরিমাণ ও দাম সঠিকভাবে দিন।', 'warning');
+                return;
+            }
+            addRow(productId, option.text, $addStock.val(), price);
+            $addProductSelect.val('').trigger('change');
+            $addQty.val(1);
+            $addPrice.val('');
+            $addStock.val(0);
+            $addProductSelect.select2('open');
+        });
 
-    addRowBtn.addEventListener('click', () => {
-        const firstRow = memoItems.querySelector('tbody tr');
-        const newRow = firstRow.cloneNode(true);
-        newRow.querySelector('.product-select').value = '';
-        newRow.querySelector('.price-input').value = '';
-        newRow.querySelector('.qty-input').value = 1;
-        newRow.querySelector('.stock-cell').textContent = '0';
-        newRow.querySelector('.line-total').textContent = '0';
-        memoItems.querySelector('tbody').appendChild(newRow);
-        bindRow(newRow);
+        $topProductButtons.on('click', function () {
+            const productId = $(this).data('id');
+            const name = $(this).data('name');
+            const price = $(this).data('price');
+            const stock = $(this).data('stock');
+            addRow(productId, name, stock, price);
+        });
+
+        $paidAmount.on('input', updateTotals);
+        $discountAmount.on('input', updateTotals);
         updateTotals();
+
+        setTimeout(() => {
+            $addProductSelect.select2('open');
+        }, 200);
     });
-
-    updateTotals();
-
-    const showPrintPrompt = <?= $showPrintPrompt ? 'true' : 'false' ?>;
-    const savedMemoNo = <?= json_encode($savedMemoNo) ?>;
-    if (showPrintPrompt && savedMemoNo) {
-        Swal.fire({
-            title: 'মেমো প্রিন্ট করবেন?',
-            text: 'আপনি কি এখনই মেমো প্রিন্ট/পিডিএফ করতে চান?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'হ্যাঁ',
-            cancelButtonText: 'না'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = `memo_print.php?memo=${encodeURIComponent(savedMemoNo)}`;
-            } else {
-                window.location.href = 'sales.php';
-            }
-        });
-    }
 </script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS milon_vet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+﻿CREATE DATABASE IF NOT EXISTS milon_vet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE milon_vet;
 
 CREATE TABLE users (
@@ -86,6 +86,9 @@ CREATE TABLE sales (
     id INT AUTO_INCREMENT PRIMARY KEY,
     memo_no VARCHAR(50) NOT NULL,
     customer_id INT,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    rounding DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,
     paid DECIMAL(10, 2) DEFAULT 0,
     payment_method VARCHAR(50),
@@ -123,6 +126,44 @@ CREATE TABLE incomes (
     amount DECIMAL(10, 2) NOT NULL,
     income_date DATE NOT NULL,
     note VARCHAR(255)
+);
+
+CREATE TABLE accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1
+);
+
+CREATE TABLE transaction_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(20) NOT NULL,
+    category_id INT NOT NULL,
+    account_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    txn_date DATE NOT NULL,
+    note VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES transaction_categories(id),
+    FOREIGN KEY (account_id) REFERENCES accounts(id)
+);
+
+CREATE TABLE account_transfers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    from_account_id INT NOT NULL,
+    to_account_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transfer_date DATE NOT NULL,
+    note VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_account_id) REFERENCES accounts(id),
+    FOREIGN KEY (to_account_id) REFERENCES accounts(id)
 );
 
 CREATE TABLE assets (
@@ -190,6 +231,21 @@ INSERT INTO expenses (expense_category_id, amount, expense_date, note) VALUES
 INSERT INTO incomes (source, amount, income_date, note) VALUES
 ('সেলস ক্যাশ', 9800.00, '2024-02-12', 'দৈনিক বিক্রয়'),
 ('ব্যাংক ট্রান্সফার', 2600.00, '2024-02-12', 'দৈনিক বিক্রয়');
+
+INSERT INTO accounts (name, type) VALUES
+('Cash', 'cash'),
+('Bank', 'bank'),
+('bKash', 'bkash');
+
+INSERT INTO transaction_categories (name, type) VALUES
+('Sales', 'income'),
+('Service', 'income'),
+('Other Income', 'income'),
+('Purchase', 'expense'),
+('Rent', 'expense'),
+('Salary', 'expense'),
+('Utilities', 'expense'),
+('Other Expense', 'expense');
 
 INSERT INTO assets (name, amount) VALUES
 ('ইনভেন্টরি স্টক', 120000.00),

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 $settings = require __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/functions.php';

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $pageTitle = 'মেমো ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
 
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     }
 }
 
-$sales = fetch_all('SELECT s.id, s.memo_no, s.total, s.paid, s.created_at, c.name AS customer
+$sales = fetch_all('SELECT s.id, s.memo_no, s.total, s.discount, s.paid, s.created_at, c.name AS customer
     FROM sales s
     LEFT JOIN customers c ON c.id = s.customer_id
     ORDER BY s.created_at DESC');
@@ -37,6 +37,7 @@ $sales = fetch_all('SELECT s.id, s.memo_no, s.total, s.paid, s.created_at, c.nam
                     <th>মেমো নং</th>
                     <th>কাস্টমার</th>
                     <th>মোট</th>
+                    <th>ডিসকাউন্ট</th>
                     <th>পরিশোধ</th>
                     <th>তারিখ</th>
                     <th class="text-end">অ্যাকশন</th>
@@ -45,7 +46,7 @@ $sales = fetch_all('SELECT s.id, s.memo_no, s.total, s.paid, s.created_at, c.nam
             <tbody>
                 <?php if (empty($sales)): ?>
                     <tr>
-                        <td colspan="6" class="text-center text-muted">কোনো মেমো নেই।</td>
+                        <td colspan="7" class="text-center text-muted">কোনো মেমো নেই।</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($sales as $sale): ?>
@@ -53,6 +54,7 @@ $sales = fetch_all('SELECT s.id, s.memo_no, s.total, s.paid, s.created_at, c.nam
                             <td><?= htmlspecialchars($sale['memo_no']) ?></td>
                             <td><?= htmlspecialchars($sale['customer'] ?? 'ওয়াক-ইন') ?></td>
                             <td><?= format_currency($currency, $sale['total']) ?></td>
+                            <td><?= format_currency($currency, $sale['discount'] ?? 0) ?></td>
                             <td><?= format_currency($currency, $sale['paid']) ?></td>
                             <td><?= date('d/m/Y', strtotime($sale['created_at'])) ?></td>
                             <td class="text-end">
