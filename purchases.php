@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'পণ্য ক্রয়';
 require __DIR__ . '/includes/header.php';
 

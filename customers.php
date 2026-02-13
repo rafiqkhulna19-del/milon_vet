@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'কাস্টমার ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
 

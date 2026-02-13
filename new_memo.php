@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'নতুন মেমো';
 require __DIR__ . '/includes/header.php';
 
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($hasDuplicate) {
-        $message = 'একই পণ্য একাধিকবার যুক্ত করা যাবে না।';
+        $message = 'এই পণ্যটি ইতিমধ্যে যুক্ত করা হয়েছে। পরিমাণ পরিবর্তন করতে চাইলে, টেবিল থেকে সংশ্লিষ্ট পণ্যের রোতে গিয়ে পরিবর্তন করুন।';
     } elseif ($memoNo !== '' && !empty($items)) {
         $subtotal = array_sum(array_column($items, 'line_total'));
         if ($discount < 0) {
@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </thead>
                             <tbody>
                                 <tr class="empty-row">
-                                    <td colspan="6" class="text-center text-muted">একাধিক পণ্য যোগ করুন</td>
+                                    <td colspan="6" class="text-center text-muted">পণ্য যোগ করুন</td>
                                 </tr>
                             </tbody>
                         </table>

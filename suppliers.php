@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'সাপ্লায়ার ম্যানেজমেন্ট';
 require __DIR__ . '/includes/header.php';
 

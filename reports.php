@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'রিপোর্ট';
 require __DIR__ . '/includes/header.php';
 

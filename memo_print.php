@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'মেমো প্রিন্ট';
 require __DIR__ . '/includes/header.php';
 

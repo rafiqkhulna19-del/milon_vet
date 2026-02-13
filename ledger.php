@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'লেনদেন লেজার';
 require __DIR__ . '/includes/header.php';
 

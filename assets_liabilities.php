@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'দায়-পরিসম্পদ';
 require __DIR__ . '/includes/header.php';
 

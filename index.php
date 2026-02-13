@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 $settings = require __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $userCount > 0) {
     $isValid = false;
     if ($user) {
         $hash = $user['password_hash'];
-        $isValid = password_verify($password, $hash) || hash_equals((string) $hash, (string) $password);
+        $isValid = password_verify($password, $hash);
     }
 
     if ($isValid) {
@@ -79,6 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && $userCount > 0) {
                 <input type="password" name="password" class="form-control" required>
             </div>
             <button class="btn btn-primary w-100" <?= $userCount === 0 ? 'disabled' : '' ?>>লগইন</button>
+            <div class="text-end mt-2">
+                <a href="forgot_password.php" class="text-decoration-none">পাসওয়ার্ড ভুলে গেলে?</a>
+            </div>
         </form>
     </div>
     <script src="assets/js/app.js"></script>

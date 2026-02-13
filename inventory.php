@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'ইনভেন্টরি';
 require __DIR__ . '/includes/header.php';
 

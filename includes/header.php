@@ -1,4 +1,10 @@
-﻿<?php
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+ // The rest of the header.php content follows...
+ // (The rest of the file remains unchanged)
+ // ...
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -55,7 +61,8 @@ $current = basename($_SERVER['PHP_SELF']);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -77,7 +84,8 @@ $current = basename($_SERVER['PHP_SELF']);
         <div class="container-fluid">
             <div class="d-flex align-items-center gap-2">
                 <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="dashboard.php">
-                    <span class="brand-mark"><?= htmlspecialchars(mb_substr($settings['app_name'], 0, 1, 'UTF-8')) ?></span>
+                    <span
+                        class="brand-mark"><?= htmlspecialchars(mb_substr($settings['app_name'], 0, 1, 'UTF-8')) ?></span>
                     <span><?= htmlspecialchars($settings['app_name']) ?></span>
                 </a>
             </div>
@@ -88,7 +96,8 @@ $current = basename($_SERVER['PHP_SELF']);
                     </a>
                     <button class="btn btn-outline-secondary btn-sm position-relative" type="button">
                         <i class="bi bi-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
                     </button>
                 </div>
                 <div class="dropdown">
@@ -100,14 +109,16 @@ $current = basename($_SERVER['PHP_SELF']);
                         <li>
                             <button class="dropdown-item d-flex align-items-center justify-content-between"
                                 type="button" data-theme-value="light">
-                                <span class="d-flex align-items-center gap-2"><i class="bi bi-brightness-high"></i>Light</span>
+                                <span class="d-flex align-items-center gap-2"><i
+                                        class="bi bi-brightness-high"></i>Light</span>
                                 <i class="bi bi-check theme-check opacity-0"></i>
                             </button>
                         </li>
                         <li>
                             <button class="dropdown-item d-flex align-items-center justify-content-between"
                                 type="button" data-theme-value="dark">
-                                <span class="d-flex align-items-center gap-2"><i class="bi bi-moon-stars"></i>Dark</span>
+                                <span class="d-flex align-items-center gap-2"><i
+                                        class="bi bi-moon-stars"></i>Dark</span>
                                 <i class="bi bi-check theme-check opacity-0"></i>
                             </button>
                         </li>
@@ -157,11 +168,13 @@ $current = basename($_SERVER['PHP_SELF']);
                         <label class="form-label">Sidebar behaviour</label>
                         <div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="sidebarMode" id="sbExpanded" value="expanded">
+                                <input class="form-check-input" type="radio" name="sidebarMode" id="sbExpanded"
+                                    value="expanded">
                                 <label class="form-check-label" for="sbExpanded">Expanded</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="sidebarMode" id="sbCompact" value="compact">
+                                <input class="form-check-input" type="radio" name="sidebarMode" id="sbCompact"
+                                    value="compact">
                                 <label class="form-check-label" for="sbCompact">Compact (icons)</label>
                             </div>
                         </div>
@@ -187,10 +200,11 @@ $current = basename($_SERVER['PHP_SELF']);
                 <div class="">
                     <ul class="nav nav-pills flex-column gap-1">
                         <?php foreach ($pages as $file => $meta): ?>
-                            <li class="nav-item">
+                            <li class="nav-item mx-4 py-2">
                                 <a class="nav-link <?= $current === $file ? 'active' : '' ?>" href="<?= $file ?>"
                                     data-label="<?= htmlspecialchars($meta['label']) ?>" <?= $current === $file ? 'aria-current="page"' : '' ?>>
-                                    <i class="bi <?= $meta['icon'] ?>"></i><span class="nav-label"><?= $meta['label'] ?></span>
+                                    <i class="bi <?= $meta['icon'] ?>"></i><span
+                                        class="nav-label"><?= $meta['label'] ?></span>
                                 </a>
                             </li>
                         <?php endforeach; ?>

@@ -1,4 +1,4 @@
-﻿CREATE DATABASE IF NOT EXISTS milon_vet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS milon_vet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE milon_vet;
 
 CREATE TABLE users (
@@ -251,6 +251,16 @@ INSERT INTO assets (name, amount) VALUES
 ('ইনভেন্টরি স্টক', 120000.00),
 ('ক্যাশ ইন হ্যান্ড', 25000.00),
 ('ব্যাংক ব্যালেন্স', 80000.00);
+
+
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 
 INSERT INTO liabilities (name, amount) VALUES
 ('সাপ্লায়ার বকেয়া', 45000.00),
