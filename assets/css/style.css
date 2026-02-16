@@ -1,17 +1,92 @@
-﻿:root {
-    --brand-gradient: linear-gradient(120deg, #1f7a8c, #47b39c);
+:root {
+    --color-white: #fff;
+    --color-black: #000;
+    --color-text-muted: #e9ecef;
+    --color-print-border: #ddd;
+    --color-print-table-border: #555;
+
+    --brand-600: #1f7a8c;
+    --brand-500: #47b39c;
+    --brand-800: #0f3f47;
+
+    --brand-gradient: linear-gradient(120deg, var(--brand-600), var(--brand-500));
+    --sidebar-bg-gradient: linear-gradient(180deg, rgba(31, 122, 140, 0.06), rgba(71, 179, 156, 0.04));
+
+    --surface-soft: rgba(0, 0, 0, 0.03);
+    --surface-glass: rgba(255, 255, 255, 0.8);
+    --surface-switcher-inner: #fff;
+    --surface-select2: transparent;
+    --surface-select2-dropdown: transparent;
+    --surface-tooltip: var(--brand-800);
+
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-signature: rgba(0, 0, 0, 0.35);
+    --border-select2: var(--bs-border-color);
+
+    --invoice-badge-color: var(--brand-800);
+    --invoice-badge-bg: rgba(31, 122, 140, 0.12);
+    --invoice-badge-border: rgba(31, 122, 140, 0.25);
+
+    --shadow-metric: 0 6px 16px rgba(0, 0, 0, 0.08);
+    --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.08);
+    --shadow-switcher: 0 8px 16px rgba(0, 0, 0, 0.12);
+
+    --radius-card: 16px;
+    --radius-pill: 999px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+
+    --table-head-bg: var(--surface-soft);
+    --hero-text-color: var(--color-white);
+    --brand-mark-text: var(--color-white);
+    --tooltip-text: var(--color-white);
+    --memo-bg: var(--bs-body-bg);
+    --memo-text: var(--bs-body-color);
+    --memo-border: var(--border-subtle);
+    --memo-soft-bg: var(--surface-soft);
+    --switcher-icon-color: inherit;
+    --switcher-icon-shadow: none;
+    --switcher-border-color: transparent;
+    --switcher-bg: linear-gradient(var(--surface-switcher-inner), var(--surface-switcher-inner)) padding-box, var(--brand-gradient) border-box;
+    --select2-option-selected-bg: var(--brand-600);
+    --select2-text-color: var(--bs-body-color);
 }
 
-body {
-    font-family: 'Hind Siliguri', 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
+[data-bs-theme='dark'] {
+    --surface-soft: rgba(255, 255, 255, 0.08);
+    --surface-glass: rgba(20, 22, 25, 0.85);
+    --surface-switcher-inner: #23272b;
+    --surface-select2: #1e1f22;
+    --surface-select2-dropdown: #1e1f22;
+
+    --border-select2: rgba(255, 255, 255, 0.2);
+    --border-subtle: rgba(255, 255, 255, 0.18);
+    --border-signature: rgba(255, 255, 255, 0.35);
+    --switcher-border-color: #444;
+
+    --invoice-badge-color: #e8f2f4;
+    --invoice-badge-bg: rgba(71, 179, 156, 0.18);
+    --invoice-badge-border: rgba(71, 179, 156, 0.35);
+    --memo-bg: #1c2127;
+    --memo-text: #e9ecef;
+    --memo-border: rgba(255, 255, 255, 0.22);
+    --memo-soft-bg: rgba(255, 255, 255, 0.07);
+
+    --shadow-switcher: 0 8px 16px rgba(0, 0, 0, 0.32);
+    --switcher-icon-color: #fff;
+    --switcher-icon-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --select2-text-color: var(--bs-body-color);
+    --select2-option-selected-bg: var(--brand-600);
 }
 
 html,
 body {
     margin: 0;
     padding: 0;
+}
+
+body {
+    font-family: 'Hind Siliguri', 'Segoe UI', sans-serif;
 }
 
 body > .container-fluid {
@@ -26,12 +101,12 @@ body > .container-fluid {
 
 .hero-card {
     background: var(--brand-gradient);
-    color: #fff;
+    color: var(--hero-text-color);
 }
 
 .metric-card {
     border: 0;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-metric);
 }
 
 .section-title {
@@ -40,7 +115,7 @@ body > .container-fluid {
 }
 
 .nav-pills .nav-link {
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     color: inherit;
 }
 
@@ -50,8 +125,8 @@ body > .container-fluid {
 
 .card {
     border: 0;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
 }
 
 .table {
@@ -59,17 +134,17 @@ body > .container-fluid {
 }
 
 .table thead {
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--table-head-bg);
 }
 
 .invoice-summary {
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: 12px;
-    padding: 1rem;
+    /* background: var(--memo-soft-bg); */
+    /* border-radius: var(--radius-md); */
+    /* padding: 1rem; */
 }
 
 .sidebar {
-    background: linear-gradient(180deg, rgba(31, 122, 140, 0.06), rgba(71, 179, 156, 0.04));
+    background: var(--sidebar-bg-gradient);
 }
 
 .sidebar-collapsed .sidebar {
@@ -82,44 +157,10 @@ body > .container-fluid {
     width: 100% !important;
 }
 
-[data-bs-theme='dark'] .hero-card {
-    color: #fff;
-}
-
-[data-bs-theme='dark'] .table thead {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-@media print {
-    body {
-        background: #fff;
-    }
-
-    nav,
-    aside,
-    .btn,
-    .alert {
-        display: none !important;
-    }
-
-    main {
-        padding: 0 !important;
-    }
-
-    #memoPrintArea {
-        box-shadow: none !important;
-        border: 1px solid #ddd;
-    }
-}
-
 /* Premium header + sidebar */
 .navbar-glass {
     backdrop-filter: blur(12px);
-    background: rgba(255, 255, 255, 0.8);
-}
-
-[data-bs-theme='dark'] .navbar-glass {
-    background: rgba(20, 22, 25, 0.85);
+    background: var(--surface-glass);
 }
 
 .brand-mark {
@@ -130,7 +171,7 @@ body > .container-fluid {
     justify-content: center;
     border-radius: 10px;
     background: var(--brand-gradient);
-    color: #fff;
+    color: var(--brand-mark-text);
     font-weight: 700;
     font-size: 0.95rem;
 }
@@ -167,13 +208,18 @@ body > .container-fluid {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 2px solid transparent;
-    background: linear-gradient(#fff, #fff) padding-box, var(--brand-gradient) border-box;
+    border: 2px solid var(--switcher-border-color);
+    background: var(--switcher-bg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-switcher);
     z-index: 5;
+}
+
+.sidebar-switcher i {
+    color: var(--switcher-icon-color) !important;
+    text-shadow: var(--switcher-icon-shadow);
 }
 
 .sidebar-switcher.is-compact i {
@@ -214,8 +260,8 @@ body > .container-fluid {
     left: 80px;
     top: 50%;
     transform: translateY(-50%);
-    background: #0f3f47;
-    color: #fff;
+    background: var(--surface-tooltip);
+    color: var(--tooltip-text);
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -235,55 +281,122 @@ body > .container-fluid {
     justify-content: flex-start;
 }
 
-[data-bs-theme='dark'] .sidebar-switcher {
-    background: #23272b !important;
-    border-color: #444 !important;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.32);
-}
-[data-bs-theme='dark'] .sidebar-switcher i {
-    color: #fff !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-}
-/* Sidebar collapse icon color fix for dark theme */
-[data-bs-theme='dark'] .sidebar-switcher i {
-    color: #fff !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-}
-
-/* Select2 alignment */
+/* Select2 alignment and dark mode support */
 .select2-container .select2-selection--single {
     height: 38px;
     display: flex;
     align-items: center;
     border-radius: 0.375rem;
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid var(--border-select2) !important;
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.select2-container--bootstrap-5.select2-container .select2-selection--single {
+    height: 38px !important;
+    border-color: var(--border-select2) !important;
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single {
+    background-color: var(--bs-body-bg) !important;
+    border-color: var(--border-select2) !important;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 38px;
-    padding-left: 12px;
-    padding-right: 20px;
-    color: #e9ecef;
+    line-height: 38px !important;
+    padding-left: 12px !important;
+    padding-right: 20px !important;
+    color: var(--bs-body-color) !important;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    color: var(--bs-body-color) !important;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 100%;
-    /* vertical-align: middle; */
+    right: 8px;
 }
 
-[data-bs-theme='dark'] .select2-container--default .select2-selection--single {
-    background-color: #1e1f22;
-    border-color: rgba(255, 255, 255, 0.2);
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--brand-600) transparent transparent transparent !important;
+    border-width: 6px !important;
 }
 
-[data-bs-theme='dark'] .select2-container--default .select2-results__option--selected {
-	background-color: #5897fb;
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--brand-600) transparent transparent transparent !important;
 }
 
-[data-bs-theme='dark'] .select2-dropdown {
-    background-color: #1e1f22;
-    color: #e9ecef;
-    border-color: rgba(255, 255, 255, 0.15);
+.select2-container--default .select2-results__option {
+    color: var(--bs-body-color) !important;
+    padding: 8px 12px !important;
+    background-color: var(--bs-body-bg) !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option {
+    color: var(--bs-body-color) !important;
+    background-color: var(--bs-body-bg) !important;
+    padding: 8px 12px !important;
+}
+
+.select2-container--default .select2-results__option--selected,
+.select2-container--bootstrap-5 .select2-results__option--selected {
+    background-color: var(--brand-600) !important;
+    color: #ffffff !important;
+}
+
+.select2-container--default .select2-results__option--highlighted,
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: rgba(71, 179, 156, 0.35) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selected,
+.select2-container--bootstrap-5 .select2-results__option--highlighted.select2-results__option--selected {
+    background-color: var(--brand-600) !important;
+    color: #ffffff !important;
+}
+
+.select2-dropdown,
+.select2-container--bootstrap-5 .select2-dropdown {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--border-select2) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.select2-container--bootstrap-5 .select2-dropdown {
+    border-color: var(--border-select2) !important;
+    background-color: var(--bs-body-bg) !important;
+}
+
+.select2-container--default .select2-results > .select2-results__options,
+.select2-container--bootstrap-5 .select2-results > .select2-results__options {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.select2-search--dropdown .select2-search__field,
+.select2-container--bootstrap-5 .select2-search__field {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--border-select2) !important;
+    font-family: 'Hind Siliguri', 'Segoe UI', sans-serif !important;
+}
+
+.select2-search--dropdown .select2-search__field:focus,
+.select2-container--bootstrap-5 .select2-search__field:focus {
+    border-color: var(--brand-600) !important;
+    box-shadow: 0 0 0 0.2rem rgba(71, 179, 156, 0.25) !important;
+}
+
+.select2-selection--multiple,
+.select2-container--bootstrap-5 .select2-selection--multiple {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--border-select2) !important;
 }
 
 /* Invoice styles */
@@ -309,20 +422,14 @@ body > .container-fluid {
     align-items: center;
     justify-content: center;
     padding: 0.25rem 0.7rem;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #0f3f47;
-    background: rgba(31, 122, 140, 0.12);
-    border: 1px solid rgba(31, 122, 140, 0.25);
+    color: var(--invoice-badge-color);
+    background: var(--invoice-badge-bg);
+    border: 1px solid var(--invoice-badge-border);
     margin-bottom: 0.4rem;
-}
-
-[data-bs-theme='dark'] .invoice-badge {
-    color: #e8f2f4;
-    background: rgba(71, 179, 156, 0.18);
-    border-color: rgba(71, 179, 156, 0.35);
 }
 
 .invoice-kv {
@@ -336,8 +443,8 @@ body > .container-fluid {
     display: grid;
     gap: 6px;
     font-size: 0.95rem;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
     padding: 8px 10px;
     width: 100%;
 }
@@ -360,10 +467,6 @@ body > .container-fluid {
     text-align: right;
 }
 
-[data-bs-theme='dark'] .customer-block {
-    border-color: rgba(255, 255, 255, 0.18);
-}
-
 .invoice-summary-wrap {
     align-items: flex-start;
     gap: 1.25rem;
@@ -376,7 +479,7 @@ body > .container-fluid {
 
 .invoice-summary-table {
     margin-bottom: 0;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-subtle);
     min-width: 200px;
 }
 
@@ -395,7 +498,7 @@ body > .container-fluid {
 }
 
 .invoice-words {
-    font-size: 0.98rem;
+    font-size: 0.88rem;
 }
 
 .invoice-note-details {
@@ -405,6 +508,9 @@ body > .container-fluid {
 #memoPrintArea {
     max-width: 210mm;
     margin: 0 auto;
+    background: var(--memo-bg);
+    color: var(--memo-text);
+    border: 1px solid var(--memo-border);
 }
 
 .invoice-signatures {
@@ -416,28 +522,131 @@ body > .container-fluid {
 }
 
 .signature-line {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid var(--border-signature);
     height: 28px;
     margin-bottom: 0.35rem;
 }
 
-[data-bs-theme='dark'] .signature-line {
-    border-bottom-color: rgba(255, 255, 255, 0.35);
+.invoice-table {
+    border-color: var(--memo-border);
+}
+
+.invoice-table th,
+.invoice-table td,
+.invoice-summary-table th,
+.invoice-summary-table td {
+    border-color: var(--memo-border);
+}
+
+.invoice-summary-table,
+.customer-block {
+    border-color: var(--memo-border);
 }
 
 @media print {
+    html,
+    body {
+        background: var(--color-white) !important;
+        color: var(--color-black);
+    }
+
+    body > .container-fluid,
+    .app-shell,
+    .app-main,
+    main {
+        background: var(--color-white) !important;
+        color: var(--color-black) !important;
+    }
+
+    nav,
+    aside,
+    .btn,
+    .alert {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
     #memoPrintArea {
         padding: 10mm;
-        box-shadow: none;
-        border: none;
+        box-shadow: none !important;
+        border: 1px solid var(--color-print-border);
+        background: var(--color-white) !important;
+        color: var(--color-black);
+    }
+
+    #memoPrintArea * {
+        color: var(--color-black) !important;
+    }
+
+    #memoPrintArea .invoice-summary,
+    #memoPrintArea .invoice-summary-table,
+    #memoPrintArea .customer-block,
+    #memoPrintArea .invoice-table thead {
+        background: var(--color-white) !important;
+    }
+
+    #memoPrintArea .table,
+    #memoPrintArea .table-bordered,
+    #memoPrintArea .table-sm {
+        --bs-table-bg: var(--color-white);
+        --bs-table-striped-bg: var(--color-white);
+        --bs-table-hover-bg: var(--color-white);
+        --bs-table-color: var(--color-black);
+        background-color: var(--color-white) !important;
+        color: var(--color-black) !important;
+    }
+
+    #memoPrintArea .table th,
+    #memoPrintArea .table td,
+    #memoPrintArea .table thead th,
+    #memoPrintArea .table tbody td,
+    #memoPrintArea .table tr {
+        background-color: var(--color-white) !important;
+        color: var(--color-black) !important;
+    }
+
+    #memoPrintArea .invoice-table {
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        border: 1px solid var(--color-print-table-border) !important;
+        border-color: var(--color-print-table-border) !important;
+    }
+
+    #memoPrintArea .invoice-table > :not(caption) > * > * {
+        border: 1px solid var(--color-print-table-border) !important;
+        border-color: var(--color-print-table-border) !important;
+        border-width: 1px !important;
+    }
+
+    #memoPrintArea .signature-line {
+        border-bottom: 1px solid #444 !important;
     }
 
     .invoice-summary-wrap {
         gap: 10mm;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        align-items: flex-start;
     }
 
     .invoice-summary {
-        gap: 6mm;
+        gap: 2mm;
+        min-width: 0;
+        flex: 0 0 56%;
+    }
+
+    .invoice-notes {
+        flex: 0 0 40%;
+        max-width: none;
+    }
+
+    .invoice-summary-table {
+        min-width: 0;
+        width: 100%;
+        table-layout: fixed;
     }
 
     .invoice-summary-table th,
@@ -449,5 +658,236 @@ body > .container-fluid {
     .invoice-table th,
     .invoice-table td {
         font-size: 0.9rem;
+        border: 1px solid var(--color-print-table-border) !important;
+        border-color: var(--color-print-table-border) !important;
+        padding: 5px 8px;
     }
+
+    .invoice-table {
+        border: 1px solid var(--color-print-table-border) !important;
+    }
+}
+
+/* Date Range Picker Styling */
+.daterangepicker {
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid var(--border-subtle) !important;
+    background-color: var(--bs-body-bg) !important;
+    font-family: 'Hind Siliguri', 'Segoe UI', sans-serif !important;
+}
+
+.daterangepicker.show-calendar .drp-calendar {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.daterangepicker .drp-calendar {
+    border-radius: var(--radius-md);
+    background-color: var(--bs-body-bg) !important;
+}
+
+.daterangepicker .drp-calendar.left {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.daterangepicker .drp-calendar.right {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.daterangepicker .calendar-table {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.daterangepicker .calendar-table th {
+    color: var(--bs-body-color) !important;
+    font-weight: 600;
+    background-color: var(--surface-soft) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    /* padding: 8px 4px !important; */
+}
+
+.daterangepicker .calendar-table td {
+    border-radius: var(--radius-sm);
+    padding: 6px 4px;
+    color: var(--bs-body-color) !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.daterangepicker .calendar-table td.prev-month,
+.daterangepicker .calendar-table td.next-month {
+    color: var(--bs-secondary-color) !important;
+}
+
+.daterangepicker .calendar-table td.available:hover,
+.daterangepicker .calendar-table td.prev-month.available:hover,
+.daterangepicker .calendar-table td.next-month.available:hover {
+    background-color: rgba(71, 179, 156, 0.2) !important;
+    color: var(--brand-600) !important;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.daterangepicker .calendar-table td.in-range {
+    background-color: rgba(71, 179, 156, 0.15) !important;
+    color: var(--bs-body-color) !important;
+    /* border-radius: 0; */
+}
+
+.daterangepicker .calendar-table td.active,
+.daterangepicker .calendar-table td.start-date,
+.daterangepicker .calendar-table td.end-date {
+    background-color: var(--brand-600) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-sm);
+}
+
+.daterangepicker .calendar-table td.disabled {
+    color: var(--bs-secondary-color) !important;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.daterangepicker .calendar-table th, .daterangepicker .calendar-table td {
+	border-radius: 0 !important;
+}
+
+
+.daterangepicker .calendar-table td.start-date {
+    border-radius: 4px 0 0 4px !important;
+}
+
+
+.daterangepicker .calendar-table td.end-date {
+    border-radius: 0 4px 4px 0 !important;
+}
+
+.daterangepicker .monthyear {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--bs-body-color) !important;
+    background-color: transparent !important;
+}
+
+.daterangepicker .calendar-time {
+    display: none !important;
+}
+
+.daterangepicker .ranges {
+    /* background-color: var(--surface-soft) !important; */
+    border-radius: var(--radius-md);
+    border-right: none !important;
+}
+
+.daterangepicker .ranges li {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--bs-body-color) !important;
+    background-color: transparent !important;
+}
+
+.daterangepicker .ranges li:hover {
+    background-color: rgba(71, 179, 156, 0.15) !important;
+    color: var(--brand-600) !important;
+}
+
+.daterangepicker .ranges li.active {
+    background-color: var(--brand-600) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-sm);
+}
+
+.daterangepicker .range-inputs {
+    background-color: transparent !important;
+}
+
+.daterangepicker .range-inputs input {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--border-subtle) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 8px !important;
+    font-size: 0.9rem !important;
+}
+
+.daterangepicker .range-inputs input:focus {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--brand-600) !important;
+    box-shadow: 0 0 0 0.2rem rgba(71, 179, 156, 0.25) !important;
+}
+
+.daterangepicker .label-input label {
+    color: var(--bs-body-color) !important;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.daterangepicker .drp-buttons {
+    background-color: transparent !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    padding: 12px !important;
+}
+
+.daterangepicker .applyBtn,
+.daterangepicker .applyBtn:hover {
+    background-color: var(--brand-600) !important;
+    color: #ffffff !important;
+    border-color: var(--brand-600) !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.daterangepicker .applyBtn:hover {
+    background-color: var(--brand-800) !important;
+    border-color: var(--brand-800) !important;
+}
+
+.daterangepicker .cancelBtn,
+.daterangepicker .cancelBtn:hover {
+    background-color: transparent !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--border-subtle) !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.daterangepicker .cancelBtn:hover {
+    background-color: var(--surface-soft) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+#dateRangePicker {
+    font-size: 0.95rem !important;
+    /* padding: 0.6rem 0.75rem !important; */
+    border-radius: var(--radius-sm) !important;
+    border: 1px solid var(--border-subtle) !important;
+    cursor: pointer;
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    transition: all 0.2s ease;
+}
+
+#dateRangePicker:focus {
+    border-color: var(--brand-600) !important;
+    box-shadow: 0 0 0 0.2rem rgba(71, 179, 156, 0.25) !important;
+}
+
+#dateRangePicker::placeholder {
+    color: var(--bs-secondary-color);
+}
+
+.daterangepicker .calendar-table {
+	border: 1px solid var(--border-subtle) !important;
+	border-radius: 4px;
+	/* background-color: #fff; */
+}
+.daterangepicker.show-ranges.ltr .drp-calendar.left {
+	border-left: 1px solid var(--border-subtle) !important;
+}
+
+.daterangepicker .drp-calendar.left .calendar-table {
+	padding-right: 0 !important;
 }

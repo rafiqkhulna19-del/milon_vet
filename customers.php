@@ -28,7 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$customers = fetch_all('SELECT name, phone, address, due_balance FROM customers ORDER BY id DESC');
+$customers = fetch_all('SELECT c.id, c.name, c.phone, c.address,
+    COALESCE(SUM(CASE WHEN cl.entry_type = "sale" THEN cl.amount END), 0) AS total_sales,
+    COALESCE(SUM(CASE WHEN cl.entry_type = "payment" THEN cl.amount END), 0) AS total_payments
+    FROM customers c
+    LEFT JOIN customer_ledger cl ON cl.customer_id = c.id
+    GROUP BY c.id
+    ORDER BY c.id DESC');
 ?>
 <div class="card p-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -70,10 +76,11 @@ $customers = fetch_all('SELECT name, phone, address, due_balance FROM customers 
                         <?php else: ?>
                             <?php foreach ($customers as $customer): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($customer['name']) ?></td>
+                                    <td><a href="customer_ledger.php?customer_id=<?= (int) $customer['id'] ?>"><?= htmlspecialchars($customer['name']) ?></a></td>
                                     <td><?= htmlspecialchars($customer['phone'] ?? '') ?></td>
                                     <td><?= htmlspecialchars($customer['address'] ?? '') ?></td>
-                                    <td><?= format_currency($currency, $customer['due_balance'] ?? 0) ?></td>
+                                    <?php $outstanding = (float) $customer['total_sales'] - (float) $customer['total_payments']; ?>
+                                    <td><?= format_currency($currency, $outstanding) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

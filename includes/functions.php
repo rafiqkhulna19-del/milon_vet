@@ -151,3 +151,248 @@ function create_transaction(string $type, int $categoryId, int $accountId, float
         ':note' => $note,
     ]);
 }
+function create_customer_ledger_entry(int $customerId, string $entryType, float $amount, string $date, string $reference = '', string $note = ''): void
+{
+    [$pdo] = db_connection();
+    if (!$pdo) return;
+    $stmt = $pdo->prepare('INSERT INTO customer_ledger (customer_id, entry_type, amount, txn_date, reference, note) VALUES (:customer_id, :entry_type, :amount, :txn_date, :reference, :note)');
+    $stmt->execute([
+        ':customer_id' => $customerId,
+        ':entry_type' => $entryType,
+        ':amount' => $amount,
+        ':txn_date' => $date,
+        ':reference' => $reference,
+        ':note' => $note,
+    ]);
+}
+function get_customer_outstanding(int $customerId): float
+{
+    [$pdo] = db_connection();
+    if (!$pdo) return 0.0;
+    $stmt = $pdo->prepare("SELECT
+        COALESCE(SUM(CASE WHEN entry_type = 'sale' THEN amount END), 0) AS total_sales,
+        COALESCE(SUM(CASE WHEN entry_type = 'payment' THEN amount END), 0) AS total_payments
+        FROM customer_ledger WHERE customer_id = :id");
+    $stmt->execute([':id' => $customerId]);
+    $row = $stmt->fetch();
+    if (!$row) return 0.0;
+    return (float) $row['total_sales'] - (float) $row['total_payments'];
+}
+
+function create_inventory_ledger_entry(int $productId, string $entryType, int $quantity, string $date, string $reference = '', string $note = ''): void
+{
+    [$pdo] = db_connection();
+    if (!$pdo) return;
+    $stmt = $pdo->prepare('INSERT INTO inventory_ledger (product_id, entry_type, quantity, txn_date, reference, note) VALUES (:product_id, :entry_type, :quantity, :txn_date, :reference, :note)');
+    $stmt->execute([
+        ':product_id' => $productId,
+        ':entry_type' => $entryType,
+        ':quantity' => $quantity,
+        ':txn_date' => $date,
+        ':reference' => $reference,
+        ':note' => $note,
+    ]);
+}
+
+function get_product_current_stock(int $productId): int
+{
+    [$pdo] = db_connection();
+    if (!$pdo) return 0;
+    $stmt = $pdo->prepare("SELECT
+        COALESCE(SUM(CASE WHEN entry_type IN ('purchase', 'initial') THEN quantity ELSE 0 END), 0) AS in_qty,
+        COALESCE(SUM(CASE WHEN entry_type = 'sale' THEN quantity ELSE 0 END), 0) AS out_qty
+        FROM inventory_ledger WHERE product_id = :product_id");
+    $stmt->execute([':product_id' => $productId]);
+    $row = $stmt->fetch();
+    if (!$row) return 0;
+    return max((int) $row['in_qty'] - (int) $row['out_qty'], 0);
+}
+
+function get_product_stock_on_date(int $productId, string $date): int
+{
+    [$pdo] = db_connection();
+    if (!$pdo) return 0;
+    $stmt = $pdo->prepare("SELECT
+        COALESCE(SUM(CASE WHEN entry_type IN ('purchase', 'initial') THEN quantity ELSE 0 END), 0) AS in_qty,
+        COALESCE(SUM(CASE WHEN entry_type = 'sale' THEN quantity ELSE 0 END), 0) AS out_qty
+        FROM inventory_ledger WHERE product_id = :product_id AND txn_date <= :date");
+    $stmt->execute([':product_id' => $productId, ':date' => $date]);
+    $row = $stmt->fetch();
+    if (!$row) return 0;
+    return max((int) $row['in_qty'] - (int) $row['out_qty'], 0);
+}
+
+function save_memo(
+    int $customerId,
+    string $memoNo,
+    array $items, // array of [product_id, quantity, price]
+    float $discount,
+    float $paid,
+    string $paymentMethod
+): array
+{
+    // Validate items
+    if (empty($items)) {
+        return ['success' => false, 'message' => 'পণ্য যোগ করুন।'];
+    }
+
+    // Calculate totals
+    $subtotal = 0;
+    foreach ($items as $item) {
+        $subtotal += $item['quantity'] * $item['price'];
+    }
+
+    if ($discount < 0) $discount = 0;
+    if ($discount > $subtotal) $discount = $subtotal;
+
+    $net = $subtotal - $discount;
+    $rounding = round($net, 0) - $net;
+    $total = $net + $rounding;
+    if ($paid > $total) $paid = $total;
+
+    [$pdo] = db_connection();
+    if (!$pdo) {
+        return ['success' => false, 'message' => 'ডাটাবেস সংযোগ ব্যর্থ।'];
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        // Insert sales record
+        $stmt = $pdo->prepare(
+            'INSERT INTO sales (memo_no, customer_id, subtotal, discount, rounding, total, paid, payment_method)
+             VALUES (:memo_no, :customer_id, :subtotal, :discount, :rounding, :total, :paid, :payment_method)'
+        );
+        $stmt->execute([
+            ':memo_no' => $memoNo,
+            ':customer_id' => $customerId ?: null,
+            ':subtotal' => $subtotal,
+            ':discount' => $discount,
+            ':rounding' => $rounding,
+            ':total' => $total,
+            ':paid' => $paid,
+            ':payment_method' => $paymentMethod,
+        ]);
+        $saleId = (int) $pdo->lastInsertId();
+
+        // Insert sale items and update stock
+        $itemStmt = $pdo->prepare(
+            'INSERT INTO sale_items (sale_id, product_id, quantity, price)
+             VALUES (:sale_id, :product_id, :quantity, :price)'
+        );
+        $stockStmt = $pdo->prepare(
+            'UPDATE products SET stock = GREATEST(stock - :quantity, 0) WHERE id = :id'
+        );
+
+        foreach ($items as $item) {
+            $itemStmt->execute([
+                ':sale_id' => $saleId,
+                ':product_id' => $item['product_id'],
+                ':quantity' => $item['quantity'],
+                ':price' => $item['price'],
+            ]);
+            $stockStmt->execute([
+                ':quantity' => $item['quantity'],
+                ':id' => $item['product_id'],
+            ]);
+            // Post to inventory ledger
+            create_inventory_ledger_entry(
+                (int) $item['product_id'],
+                'sale',
+                (int) $item['quantity'],
+                date('Y-m-d'),
+                $memoNo,
+                'Sale ' . $memoNo
+            );
+        }
+
+        // Record payment transaction if any
+        if ($paid > 0) {
+            $accountKey = 'cash';
+            if (mb_strpos($paymentMethod, 'ব্যাংক') !== false) {
+                $accountKey = 'bank';
+            } elseif (mb_strpos($paymentMethod, 'মোবাইল') !== false) {
+                $accountKey = 'bkash';
+            }
+            $accountId = get_account_id_by_type_or_name($accountKey);
+            $categoryId = ensure_transaction_category('Sales', 'income');
+            if ($accountId && $categoryId) {
+                create_transaction(
+                    'income',
+                    $categoryId,
+                    $accountId,
+                    (float) $paid,
+                    date('Y-m-d'),
+                    'Memo ' . $memoNo
+                );
+            }
+        }
+
+        // Record customer ledger entries
+        if ($customerId) {
+            create_customer_ledger_entry(
+                $customerId,
+                'sale',
+                (float) $total,
+                date('Y-m-d'),
+                $memoNo,
+                'Memo ' . $memoNo
+            );
+            if ($paid > 0) {
+                create_customer_ledger_entry(
+                    $customerId,
+                    'payment',
+                    (float) $paid,
+                    date('Y-m-d'),
+                    $memoNo,
+                    'Paid for ' . $memoNo
+                );
+            }
+        }
+
+        $pdo->commit();
+        return [
+            'success' => true,
+            'memo_no' => $memoNo,
+            'message' => 'মেমো সংরক্ষণ সফল হয়েছে।'
+        ];
+    } catch (Throwable $error) {
+        $pdo->rollBack();
+        return [
+            'success' => false,
+            'message' => 'মেমো সংরক্ষণ ব্যর্থ হয়েছে: ' . $error->getMessage()
+        ];
+    }
+}
+
+/**
+ * Get inventory ledger entries for a specific product with calculated balance
+ */
+function get_product_ledger_entries(int $productId): array
+{
+    $sql = "SELECT il.id, il.product_id, il.entry_type, il.quantity, il.txn_date, il.reference, il.note, p.name AS product_name
+        FROM inventory_ledger il
+        LEFT JOIN products p ON p.id = il.product_id
+        WHERE il.product_id = ?
+        ORDER BY il.txn_date ASC, il.id ASC";
+    
+    $rows = fetch_all($sql, [$productId]);
+    
+    // Calculate running balance for this product
+    $entries = [];
+    $runningBalance = 0;
+    
+    foreach ($rows as $row) {
+        if ($row['entry_type'] === 'purchase' || $row['entry_type'] === 'initial') {
+            $runningBalance += (int) $row['quantity'];
+        } elseif ($row['entry_type'] === 'sale') {
+            $runningBalance -= (int) $row['quantity'];
+        }
+        
+        $row['balance'] = $runningBalance;
+        $entries[] = $row;
+    }
+    
+    // Reverse to show newest first
+    return array_reverse($entries);
+}

@@ -60,8 +60,8 @@ if ($memo) {
             <div class="customer-row customer-row-top">
                 <span class="label text-muted">নাম</span>
                 <span class="value"><?= htmlspecialchars($memo['customer'] ?? 'ওয়াক-ইন') ?></span>
-                <span class="label text-muted">মোবাইল</span>
-                <span class="value phone-value"><?= htmlspecialchars($memo['customer_phone'] ?? '-') ?></span>
+                <span class="label phone-value">মোবাইল</span>
+                <span class="value "><?= htmlspecialchars($memo['customer_phone'] ?? '-') ?></span>
             </div>
             <div class="customer-row">
                 <span class="label text-muted">ঠিকানা</span>
@@ -102,12 +102,12 @@ if ($memo) {
             </tbody>
         </table>
     </div>
-    <div class="invoice-summary-wrap d-flex justify-content-between flex-wrap gap-3 mt-3">
+    <div class="invoice-summary-wrap d-flex justify-content-between flex-wrap mt-3">
         <div class="invoice-notes">
             <div class="invoice-words fw-semibold">নীট টাকা কথায়: <?= $memo ? format_bangla_amount_in_words((float) $memo['total']) : '---' ?></div>
             <div class="invoice-note-details">
                 <div class="text-muted small">প্রস্তুতকারী: <?= htmlspecialchars($_SESSION['user']['name'] ?? 'ম্যানেজার') ?></div>
-                <div class="text-muted small">সামান্য পরিবর্তন/ফেরত নীতি প্রযোজ্য</div>
+                <!-- <div class="text-muted small">সামান্য পরিবর্তন/ফেরত নীতি প্রযোজ্য</div> -->
             </div>
         </div>
         <div class="invoice-summary d-flex gap-3">

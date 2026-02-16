@@ -88,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['purchase_submit'])) {
                         ':unit_cost' => $item['unit_cost'],
                         ':id' => $item['product_id'],
                     ]);
+                    // Post to inventory ledger
+                    create_inventory_ledger_entry((int) $item['product_id'], 'purchase', (int) $item['quantity'], $purchaseDate, 'Purchase #' . $purchaseId, 'Purchase ' . $purchaseDate);
                 }
 
                 if ($supplierId > 0 && $dueAmount > 0) {

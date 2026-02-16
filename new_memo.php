@@ -1,11 +1,74 @@
 <?php
 $pageTitle = 'নতুন মেমো';
+
+// Handle AJAX POST before any output
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    
+    require __DIR__ . '/config.php';
+    require __DIR__ . '/includes/functions.php';
+    
+    $customerId = (int) ($_POST['customer_id'] ?? 0);
+    $memoNo = trim($_POST['memo_no'] ?? '');
+    $paymentMethod = trim($_POST['payment_method'] ?? '');
+    $paid = (float) ($_POST['paid'] ?? 0);
+    $discount = (float) ($_POST['discount'] ?? 0);
+
+    $productIds = $_POST['product_id'] ?? [];
+    $quantities = $_POST['quantity'] ?? [];
+    $prices = $_POST['price'] ?? [];
+
+    $items = [];
+    $usedProducts = [];
+    $hasDuplicate = false;
+    
+    foreach ($productIds as $index => $productId) {
+        $productId = (int) $productId;
+        $quantity = (int) ($quantities[$index] ?? 0);
+        $price = (float) ($prices[$index] ?? 0);
+        
+        if ($productId > 0) {
+            if (in_array($productId, $usedProducts, true)) {
+                $hasDuplicate = true;
+                break;
+            }
+            $usedProducts[] = $productId;
+        }
+        
+        if ($productId > 0 && $quantity > 0 && $price > 0) {
+            $items[] = [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'price' => $price,
+            ];
+        }
+    }
+
+    if ($hasDuplicate) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'এই পণ্যটি ইতিমধ্যে যুক্ত করা হয়েছে।'
+        ]);
+        exit;
+    }
+    
+    if ($memoNo === '' || empty($items)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'সব তথ্য ঠিকভাবে পূরণ করুন।'
+        ]);
+        exit;
+    }
+    
+    $result = save_memo($customerId, $memoNo, $items, $discount, $paid, $paymentMethod);
+    echo json_encode($result);
+    exit;
+}
+
+// Page load - include header
 require __DIR__ . '/includes/header.php';
 
 $currency = $settings['currency'] ?? '৳';
-$message = '';
-$showPrintPrompt = false;
-$savedMemoNo = '';
 
 $customers = fetch_all('SELECT id, name, phone, address FROM customers ORDER BY name ASC');
 $products = fetch_all('SELECT id, name, selling_price, stock FROM products ORDER BY name ASC');
@@ -21,120 +84,6 @@ $topProducts = fetch_all("
 $memoSeedRow = fetch_one('SELECT COUNT(*) AS total FROM sales');
 $memoSeed = (int) ($memoSeedRow['total'] ?? 0) + 1;
 $generatedMemo = 'MV-' . date('Ymd') . '-' . str_pad((string) $memoSeed, 4, '0', STR_PAD_LEFT);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $customerId = (int) ($_POST['customer_id'] ?? 0);
-    $memoNo = trim($_POST['memo_no'] ?? '');
-    $paymentMethod = trim($_POST['payment_method'] ?? '');
-    $paid = (float) ($_POST['paid'] ?? 0);
-    $discount = (float) ($_POST['discount'] ?? 0);
-
-    $productIds = $_POST['product_id'] ?? [];
-    $quantities = $_POST['quantity'] ?? [];
-    $prices = $_POST['price'] ?? [];
-
-    $items = [];
-    $usedProducts = [];
-    $hasDuplicate = false;
-    foreach ($productIds as $index => $productId) {
-        $productId = (int) $productId;
-        $quantity = (int) ($quantities[$index] ?? 0);
-        $price = (float) ($prices[$index] ?? 0);
-        if ($productId > 0) {
-            if (in_array($productId, $usedProducts, true)) {
-                $hasDuplicate = true;
-                break;
-            }
-            $usedProducts[] = $productId;
-        }
-        if ($productId > 0 && $quantity > 0 && $price > 0) {
-            $items[] = [
-                'product_id' => $productId,
-                'quantity' => $quantity,
-                'price' => $price,
-                'line_total' => $quantity * $price,
-            ];
-        }
-    }
-
-    if ($hasDuplicate) {
-        $message = 'এই পণ্যটি ইতিমধ্যে যুক্ত করা হয়েছে। পরিমাণ পরিবর্তন করতে চাইলে, টেবিল থেকে সংশ্লিষ্ট পণ্যের রোতে গিয়ে পরিবর্তন করুন।';
-    } elseif ($memoNo !== '' && !empty($items)) {
-        $subtotal = array_sum(array_column($items, 'line_total'));
-        if ($discount < 0) {
-            $discount = 0;
-        }
-        if ($discount > $subtotal) {
-            $discount = $subtotal;
-        }
-        $net = $subtotal - $discount;
-        $rounding = round($net, 0) - $net;
-        $total = $net + $rounding;
-        if ($paid > $total) {
-            $paid = $total;
-        }
-
-        [$pdo] = db_connection();
-        if ($pdo) {
-            $pdo->beginTransaction();
-            try {
-                $stmt = $pdo->prepare('INSERT INTO sales (memo_no, customer_id, subtotal, discount, rounding, total, paid, payment_method) VALUES (:memo_no, :customer_id, :subtotal, :discount, :rounding, :total, :paid, :payment_method)');
-                $stmt->execute([
-                    ':memo_no' => $memoNo,
-                    ':customer_id' => $customerId ?: null,
-                    ':subtotal' => $subtotal,
-                    ':discount' => $discount,
-                    ':rounding' => $rounding,
-                    ':total' => $total,
-                    ':paid' => $paid,
-                    ':payment_method' => $paymentMethod,
-                ]);
-                $saleId = (int) $pdo->lastInsertId();
-
-                $itemStmt = $pdo->prepare('INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES (:sale_id, :product_id, :quantity, :price)');
-                $stockStmt = $pdo->prepare('UPDATE products SET stock = GREATEST(stock - :quantity, 0) WHERE id = :id');
-
-                foreach ($items as $item) {
-                    $itemStmt->execute([
-                        ':sale_id' => $saleId,
-                        ':product_id' => $item['product_id'],
-                        ':quantity' => $item['quantity'],
-                        ':price' => $item['price'],
-                    ]);
-                    $stockStmt->execute([
-                        ':quantity' => $item['quantity'],
-                        ':id' => $item['product_id'],
-                    ]);
-                }
-
-                if ($paid > 0) {
-                    $accountKey = 'cash';
-                    if (mb_strpos($paymentMethod, 'ব্যাংক') !== false) {
-                        $accountKey = 'bank';
-                    } elseif (mb_strpos($paymentMethod, 'মোবাইল') !== false) {
-                        $accountKey = 'bkash';
-                    }
-                    $accountId = get_account_id_by_type_or_name($accountKey);
-                    $categoryId = ensure_transaction_category('Sales', 'income');
-                    if ($accountId && $categoryId) {
-                        create_transaction('income', $categoryId, $accountId, (float) $paid, date('Y-m-d'), 'Memo ' . $memoNo);
-                    }
-                }
-
-                $pdo->commit();
-                $message = 'মেমো সংরক্ষণ হয়েছে।';
-                $showPrintPrompt = true;
-                $savedMemoNo = $memoNo;
-                $generatedMemo = '';
-            } catch (Throwable $error) {
-                $pdo->rollBack();
-                $message = 'মেমো সংরক্ষণ ব্যর্থ হয়েছে।';
-            }
-        }
-    } else {
-        $message = 'সব তথ্য ঠিকভাবে পূরণ করুন।';
-    }
-}
 ?>
 <div class="row g-4">
     <div class="col-lg-9">
@@ -143,15 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h5 class="section-title">নতুন মেমো</h5>
                 <span class="text-muted">মেমো নং: <strong id="memoPreview"><?= htmlspecialchars($generatedMemo) ?></strong></span>
             </div>
-            <?php if ($message): ?>
-                <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
-            <?php endif; ?>
             <form class="row g-3" method="post" id="memoForm">
                 <input type="hidden" name="memo_no" value="<?= htmlspecialchars($generatedMemo) ?>" id="memoNoField">
                 <div class="col-md-6">
                     <label class="form-label">কাস্টমার</label>
                     <select class="form-select" name="customer_id" id="customerSelect">
-                        <option value="">ওয়াক-ইন</option>
+                        <option value="">ওয়াক-ইন</option>
                         <?php foreach ($customers as $customer): ?>
                             <option value="<?= (int) $customer['id'] ?>"
                                 data-phone="<?= htmlspecialchars($customer['phone'] ?? '') ?>"
@@ -174,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="col-md-5">
                                 <label class="form-label">পণ্য</label>
                                 <select class="form-select" id="addProductSelect">
-                                    <option value="">পণ্য নির্বাচন করুন</option>
+                                    <option value="">পণ্য সিলেক্ট করুন</option>
                                     <?php foreach ($products as $product): ?>
                                         <option value="<?= (int) $product['id'] ?>"
                                             data-price="<?= htmlspecialchars($product['selling_price']) ?>"
@@ -194,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">দাম</label>
-                                <input class="form-control" type="number" step="0.01" id="addPrice">
+                                <input class="form-control" type="number" step="1" id="addPrice">
                             </div>
                             <div class="col-md-1 d-grid">
                                 <button class="btn btn-primary" type="button" id="addItemBtn">+</button>
@@ -273,6 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 <script>
     jQuery(function ($) {
+        const $memoForm = $('#memoForm');
         const $memoItems = $('#memoItems');
         const $addItemForm = $('#addItemForm');
         const $addProductSelect = $('#addProductSelect');
@@ -379,9 +326,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $body.find('.empty-row').toggleClass('d-none', hasRows);
         };
 
-        const addRow = (productId, name, stock, price) => {
+        const addRow = (productId, name, stock, price, qty = 1) => {
             if (isDuplicateProduct(String(productId))) {
-                Swal.fire('দুঃখিত', 'এই পণ্য ইতিমধ্যে যুক্ত করা হয়েছে।', 'warning');
+                Swal.fire('দুঃখিত', 'এই পণ্য ইতিমধ্যে যুক্ত করা হয়েছে।', 'warning');
                 return;
             }
             const $row = $(
@@ -391,8 +338,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="hidden" name="product_id[]" value="${productId}">
                     </td>
                     <td>${stock}</td>
-                    <td><input class="form-control qty-input" type="number" name="quantity[]" min="1" value="1"></td>
-                    <td><input class="form-control price-input" type="number" step="0.01" name="price[]" value="${price}"></td>
+                    <td><input class="form-control qty-input" type="number" name="quantity[]" min="1" value="${qty}"></td>
+                    <td><input class="form-control price-input" type="number" step="1" name="price[]" value="${price}"></td>
                     <td class="line-total">0</td>
                     <td><button class="btn btn-outline-danger btn-sm remove-row" type="button">×</button></td>
                 </tr>`
@@ -418,7 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const option = $addProductSelect[0].options[$addProductSelect[0].selectedIndex];
             const productId = option?.value;
             if (!productId) {
-                Swal.fire('পণ্য নির্বাচন করুন', 'যোগ করার আগে পণ্য নির্বাচন করুন।', 'warning');
+                Swal.fire('পণ্য সিলেক্ট করুন', 'যোগ করার আগে পণ্য সিলেক্ট করুন।', 'warning');
                 return;
             }
             const qty = parseFloat($addQty.val() || 0);
@@ -427,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Swal.fire('ভুল ইনপুট', 'পরিমাণ ও দাম সঠিকভাবে দিন।', 'warning');
                 return;
             }
-            addRow(productId, option.text, $addStock.val(), price);
+            addRow(productId, option.text, $addStock.val(), price, qty);
             $addProductSelect.val('').trigger('change');
             $addQty.val(1);
             $addPrice.val('');
@@ -447,9 +394,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $discountAmount.on('input', updateTotals);
         updateTotals();
 
-        setTimeout(() => {
-            $addProductSelect.select2('open');
-        }, 200);
+        // Handle form submission for memo save
+        $memoForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            $.ajax({
+                url: window.location.pathname,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'সফল!',
+                            html: `মেমো <strong>${response.memo_no}</strong> সংরক্ষণ হয়েছে।`,
+                            icon: 'success',
+                            confirmButtonText: 'ঠিক আছে',
+                            showDenyButton: true,
+                            denyButtonText: 'প্রিন্ট করুন',
+                        }).then((result) => {
+                            if (result.isDenied) {
+                                window.location.href = 'memo_print.php?memo=' + encodeURIComponent(response.memo_no);
+                            } else {
+                                // Reload the page to reset the form and show the new memo number
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire('ত্রুটি', response.message || 'কোনো সমস্যা হয়েছে।', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('AJAX Error:', {status: xhr.status, statusText: xhr.statusText, responseText: xhr.responseText, error: error});
+                    let errorMsg = 'সার্ভার সংযোগ ব্যর্থ।';
+                    if (xhr.responseText) {
+                        try {
+                            const resp = JSON.parse(xhr.responseText);
+                            errorMsg = resp.message || errorMsg;
+                        } catch (e) {
+                            errorMsg = `Error (${xhr.status}): ${xhr.responseText.substring(0, 100)}`;
+                        }
+                    }
+                    Swal.fire('ত্রুটি', errorMsg, 'error');
+                }
+            });
+        });
     });
 </script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

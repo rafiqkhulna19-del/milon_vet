@@ -41,8 +41,7 @@ CREATE TABLE customers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     phone VARCHAR(30),
-    address VARCHAR(255),
-    due_balance DECIMAL(10, 2) DEFAULT 0
+    address VARCHAR(255)
 );
 
 CREATE TABLE products (
@@ -154,6 +153,31 @@ CREATE TABLE transactions (
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
+CREATE TABLE customer_ledger (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    entry_type VARCHAR(20) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    txn_date DATE NOT NULL,
+    reference VARCHAR(100),
+    note VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE inventory_ledger (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    entry_type VARCHAR(20) NOT NULL,
+    quantity INT NOT NULL,
+    txn_date DATE NOT NULL,
+    reference VARCHAR(100),
+    note VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    INDEX (product_id, txn_date)
+);
+
 CREATE TABLE account_transfers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     from_account_id INT NOT NULL,
@@ -199,10 +223,10 @@ INSERT INTO suppliers (name, phone, address, balance) VALUES
 ('Vet Pharma Ltd.', '+88016XXXXXXX', 'ঢাকা', 5000.00),
 ('Green Feed', '+88015XXXXXXX', 'মানিকগঞ্জ', 3500.00);
 
-INSERT INTO customers (name, phone, address, due_balance) VALUES
-('রহিম এন্টারপ্রাইজ', '+88017XXXXXXX', 'সাভার', 8200.00),
-('সাথী ফিড', '+88019XXXXXXX', 'মানিকগঞ্জ', 4500.00),
-('কৃষ্ণা ভেট ক্লিনিক', '+88018XXXXXXX', 'গাজীপুর', 6300.00);
+INSERT INTO customers (name, phone, address) VALUES
+('রহিম এন্টারপ্রাইজ', '+88017XXXXXXX', 'সাভার'),
+('সাথী ফিড', '+88019XXXXXXX', 'মানিকগঞ্জ'),
+('কৃষ্ণা ভেট ক্লিনিক', '+88018XXXXXXX', 'গাজীপুর');
 
 INSERT INTO products (name, category_id, supplier_id, purchase_price, selling_price, stock) VALUES
 ('ভিটামিন ফিড প্রিমিক্স', 2, 2, 1200.00, 1450.00, 120),

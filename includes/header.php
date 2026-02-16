@@ -64,6 +64,8 @@ $current = basename($_SERVER['PHP_SELF']);
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -198,9 +200,9 @@ $current = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-chevron-double-left"></i>
                 </button>
                 <div class="">
-                    <ul class="nav nav-pills flex-column gap-1">
+                    <ul class="nav nav-pills flex-column gap-1 mt-2">
                         <?php foreach ($pages as $file => $meta): ?>
-                            <li class="nav-item mx-4 py-2">
+                            <li class="nav-item mx-4">
                                 <a class="nav-link <?= $current === $file ? 'active' : '' ?>" href="<?= $file ?>"
                                     data-label="<?= htmlspecialchars($meta['label']) ?>" <?= $current === $file ? 'aria-current="page"' : '' ?>>
                                     <i class="bi <?= $meta['icon'] ?>"></i><span
